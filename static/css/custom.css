@@ -1,0 +1,24 @@
+/* Color theme */
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --info-color: #17a2b8;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+}
+
+/* Custom CSS for the footer */
+.footer-custom {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 7vh;
+    background-color: var(--light-color);
+    color: var(--secondary-color);
+    text-align: center;
+    line-height: 4vh;
+}

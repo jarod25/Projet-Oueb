@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'user',
+    'room',
 ]
 
 MIDDLEWARE = [
@@ -55,7 +57,7 @@ ROOT_URLCONF = 'Projet_Oueb.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates", BASE_DIR / "user/templates"],
+        'DIRS': [BASE_DIR / "templates", BASE_DIR / "user/templates", BASE_DIR / "room/templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

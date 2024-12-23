@@ -13,19 +13,23 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
             <div class="container">
-                <a class="navbar-brand" href="">
+                <p class="navbar-brand">
                     <img src="{% static 'img/logo.svg' %}" alt="Logo" width="30" height="30">
                     Projet Oueb
-                </a>
+                </p>
             </div>
         </nav>
     </header>
     {% block content %}
 
     {% endblock %}
-    <footer class="footer">
+    <footer class="footer-custom">
         <div class="container">
-            <p>&copy; 2024 : Projet Oueb par Jarod Kohler, Lucie Monneret et Lucas Runser</p>
+            <div class="row">
+                <div class="col-md-12">
+                    <p>&copy; 2024 Projet Oueb : Jarod Kohler, Lucie Monneret, Lucas Runser. Tous droits réservés.</p>
+                </div>
+            </div>
         </div>
     </footer>
     <script src="{% static 'js/jquery-3.7.1.js' %}"></script>

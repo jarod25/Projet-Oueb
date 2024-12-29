@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Inviter l'utilisateur à {{ room.name }}</h1>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <label for="receiver">Selectionnez un utilisateur à ajouter</label>
+        <input type="text" id="receiver" name="receiver_username" placeholder="Commencez à taper un nom d'utilisateur">
+        <ul id="suggestions-list"></ul>
+        <button type="submit">Envoyer une invitation</button>
+    </form>
+    <a href="{% url 'room_list' %}">Retour à la liste des salons</a>
+{% endblock %}

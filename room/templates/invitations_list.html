@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Vos invitations en attente</h1>
+    <ul>
+        {% for invitation in invitations %}
+            <li>
+                Invitation de {{ invitation.sender.username }} à rejoindre {{ invitation.room.name }}
+                <a href="{% url 'manage_invitation' invitation.id %}">Gérer</a>
+            </li>
+        {% empty %}
+            <p>Pas d'invitation en attente</p>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'room_list' %}">Retour à la liste des salons</a>
+{% endblock %}

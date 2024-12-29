@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container mt-5">
+        <div class="gap-2 m-3">
+            <a href="{% url 'room_list' %}" class="btn btn-secondary">Retour à la liste des salons</a>
+        </div>
+        <h1 class="text-center mb-4">Mon Profil</h1>
+        <div class="row">
+            <div class="col-md-6">
+                <form method="POST" action="{% url 'profile' %}">
+                    {% csrf_token %}
+                    <!-- Gestion des erreurs globales -->
+                    {{ user_form.non_field_errors }}
+                    {{ pwd_form.non_field_errors }}
+                    <!-- Formulaire de mise à jour des informations du profil -->
+                    <h3 class="mb-3">Mise à jour des informations</h3>
+                    <div class="mb-3">
+                        {{ user_form.email.label_tag }}
+                        {{ user_form.email }}
+                        {% if user_form.email.errors %}
+                            <div class="text-danger">{{ user_form.email.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ user_form.username.label_tag }}
+                        {{ user_form.username }}
+                        {% if user_form.username.errors %}
+                            <div class="text-danger">{{ user_form.username.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="user_form_submit" class="btn btn-primary">Mettre à jour</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-6">
+                <form method="POST" action="{% url 'profile' %}">
+                    <!-- Formulaire de changement de mot de passe -->
+                    <h3 class="mb-3">Changer le mot de passe</h3>
+                    <div class="mb-3">
+                        {{ pwd_form.current_password.label_tag }}
+                        {{ pwd_form.current_password }}
+                        {% if pwd_form.current_password.errors %}
+                            <div class="text-danger">{{ pwd_form.current_password.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ pwd_form.password.label_tag }}
+                        {{ pwd_form.password }}
+                        {% if pwd_form.password.errors %}
+                            <div class="text-danger">{{ pwd_form.password.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ pwd_form.password_confirm.label_tag }}
+                        {{ pwd_form.password_confirm }}
+                        {% if pwd_form.password_confirm.errors %}
+                            <div class="text-danger">{{ pwd_form.password_confirm.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="pwd_form_submit" class="btn btn-danger">Changer le mot de passe
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

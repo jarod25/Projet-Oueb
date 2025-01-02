@@ -1,20 +1,44 @@
 from user.models import User
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Room, Invitation
+from .models import Room, Invitation, Status, UserStatus
 from user import login_required
 
 
 @login_required
 def room_list_view(request):
-    # TODO: Get all rooms where the user is a member
-    return render(request, "room_list.html", {"rooms": []})
+    all_rooms = Room.objects.all()
+    return render(request, "room_list.html", {"rooms": all_rooms})
 
 
 @login_required
 def create_room_view(request):
-    # TODO: Create a new room with the current user as the owner
-    return
+    if request.method == "POST":
+        # Récupérer le nom du salon à partir du formulaire
+        room_name = request.POST.get("name")
+
+        # Vérifier si un salon avec le même nom existe déjà
+        if Room.objects.filter(name=room_name).exists():
+            return render(request, "create_room.html", {
+                "error": "Un salon avec ce nom existe déjà."
+            })
+
+        # Créer le salon
+        room = Room.objects.create(name=room_name)
+
+        # Ajouter l'utilisateur comme membre du salon
+        room.members.add(request.user)
+
+        # Définir l'utilisateur comme propriétaire (owner) avec le modèle UserStatus
+        from .models import Status, UserStatus
+        owner_status = Status.objects.get(label="owner")  # Récupérer le statut "owner"
+        UserStatus.objects.create(user=request.user, room=room, status=owner_status)
+
+        # Rediriger vers la liste des salons après création
+        return redirect("room_list")
+
+    # Afficher la page de création de salon pour les requêtes GET
+    return render(request, "create_room.html")
 
 
 def search_users(request):

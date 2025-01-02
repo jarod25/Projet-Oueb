@@ -2,10 +2,14 @@
 
 {% block content %}
     <h1>Vos salons</h1>
-    <ul>
-        {% for room in rooms %}
-            <li><a href="{% url 'room_detail' room.id %}">{{ room.name }}</a></li>
-        {% endfor %}
-    </ul>
+    {% if rooms %}
+        <ul>
+            {% for room in rooms %}
+                <li>{{ room.name }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Vous n'êtes membre d'aucun salon.</p>
+    {% endif %}
     <a href="{% url 'create_room' %}">➕ Créer un salon</a>
 {% endblock %}

@@ -1,8 +1,8 @@
 from django.contrib import messages
-from django.contrib.auth import logout, login, authenticate
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from . import forms
+from user import login_required
+from .models import User
 
 
 def index(request):
@@ -10,29 +10,20 @@ def index(request):
 
 
 def login_view(request):
-    if request.user.is_authenticated:
+    if request.session.get('user_id'):
         return redirect('room_list')
 
     form = forms.LoginForm()
     if request.method == 'POST':
         form = forms.LoginForm(request.POST)
         if form.is_valid():
-            user = authenticate(
-                request,
-                username=form.cleaned_data['userlogin'],
-                password=form.cleaned_data['password']
-            )
-            if user is not None:
-                login(request, user)
-                messages.success(request, f'Bienvenue {user.username}')
-                return redirect('room_list')
-            else:
-                messages.error(request, 'Nom d’utilisateur ou mot de passe incorrect')
+            form.login(request)
+            return redirect('room_list')
     return render(request, 'login.html', {'form': form})
 
 
 def register_view(request):
-    if request.user.is_authenticated:
+    if request.session.get('user_id'):
         return redirect('room_list')
 
     form = forms.RegisterForm()
@@ -40,33 +31,39 @@ def register_view(request):
         form = forms.RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
-            messages.success(request, f'Compte créé pour {user.username}')
-            return redirect('room_list')
+            messages.success(request, f'Compte créé pour {user.username}, vous pouvez vous connecter.')
+            return redirect('login')
     else:
         return render(request, 'register.html', {'form': form})
 
 
 @login_required
 def logout_view(request):
-    logout(request)
+    request.session.flush()
     return redirect('index')
 
 
 @login_required
 def profile_view(request):
-    user_form = forms.ProfileForm(instance=request.user)
-    pwd_form = forms.PasswordForm(user=request.user)
+    user = request.session.get('user_id')
+    if not user:
+        return redirect('login')
+
+    user_instance = User.objects.get(id=user)
+    user_form = forms.ProfileForm(instance=user_instance)
+    pwd_form = forms.PasswordForm(user=user_instance)
     if request.method == 'POST':
         if 'user_form_submit' in request.POST:
-            user_form = forms.ProfileForm(request.POST, instance=request.user)
+            user_form = forms.ProfileForm(request.POST, instance=user_instance)
             if user_form.is_valid():
                 user_form.save()
                 messages.success(request, 'Profil mis à jour avec succès.')
+                return redirect('profile')
         elif 'pwd_form_submit' in request.POST:
-            pwd_form = forms.PasswordForm(request.user, request.POST)
+            pwd_form = forms.PasswordForm(user=user_instance, data=request.POST)
             if pwd_form.is_valid():
-                pwd_form.save(request.user)
+                pwd_form.save()
                 messages.success(request, 'Mot de passe mis à jour avec succès. Veuillez vous reconnecter.')
+                return redirect('login')
 
     return render(request, 'profile.html', {'user_form': user_form, 'pwd_form': pwd_form})

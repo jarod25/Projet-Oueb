@@ -17,7 +17,7 @@
                 <img src="{% static 'img/logo.svg' %}" alt="Logo" width="30" height="30">
                 Projet Oueb<sup>3</sup>
             </p>
-            {% if user.is_authenticated %}
+            {% if is_authenticated %}
                 <ul class="navbar-nav">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'profile' %}">Profil</a>
@@ -54,7 +54,8 @@
     <div class="container">
         <h1>Accueil</h1>
         <p>Bienvenue sur le site de Projet Oueb<sup>3</sup> !</p>
-        {% if user.is_authenticated %}
+        {% if is_authenticated %}
+            <p>Vous êtes connecté en tant que {{ current_user.username }}.</p>
             <div class="gap-2 m-3">
                 <a href="{% url 'room_list' %}" class="btn btn-secondary">Accéder à la liste des salons</a>
             </div>

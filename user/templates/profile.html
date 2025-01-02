@@ -16,10 +16,10 @@
                     <!-- Formulaire de mise à jour des informations du profil -->
                     <h3 class="mb-3">Mise à jour des informations</h3>
                     <div class="mb-3">
-                        {{ user_form.email.label_tag }}
-                        {{ user_form.email }}
-                        {% if user_form.email.errors %}
-                            <div class="text-danger">{{ user_form.email.errors }}</div>
+                        {{ user_form.mail.label_tag }}
+                        {{ user_form.mail }}
+                        {% if user_form.mail.errors %}
+                            <div class="text-danger">{{ user_form.mail.errors }}</div>
                         {% endif %}
                     </div>
                     <div class="mb-3">

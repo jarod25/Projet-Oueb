@@ -12,24 +12,6 @@ class Room(models.Model):
         return self.name
 
 
-class Status(models.Model):
-    label = models.CharField(
-        max_length=127,
-        unique=True,
-        choices=[
-            ('owner', 'Propriétaire'),
-            ('administrator', 'Administrateur'),
-            ('user', 'Utilisateur'),
-            ('muted', 'Muet'),
-            ('banned', 'Banni')
-        ],
-        default='user'
-    )
-
-    def __str__(self):
-        return self.label
-
-
 class Message(models.Model):
     content = models.TextField()
     sent_at = models.DateTimeField(auto_now_add=True)
@@ -43,13 +25,24 @@ class Message(models.Model):
 class UserStatus(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
-    status = models.ForeignKey(Status, on_delete=models.SET_NULL, null=True)
+    status = models.CharField(
+        max_length=127,
+        unique=False,
+        choices=[
+            ('owner', 'Propriétaire'),
+            ('administrator', 'Administrateur'),
+            ('user', 'Utilisateur'),
+            ('muted', 'Muet'),
+            ('banned', 'Banni')
+        ],
+        default='user'
+    )
 
     class Meta:
-        unique_together = ('user', 'room')
+        unique_together = ('user', 'room', 'status')
 
     def __str__(self):
-        return f'{self.user.username} - {self.room.name} - {self.status.label}'
+        return f'{self.user.username} - {self.room.name} - {self.status}'
 
 
 class Invitation(models.Model):

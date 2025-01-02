@@ -7,6 +7,7 @@
     <title>Projet Oueb³</title>
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'img/logo.svg' %}">
 </head>
 <body>
@@ -54,6 +55,7 @@
     <div class="container">
         <h1>Accueil</h1>
         <p>Bienvenue sur le site de Projet Oueb<sup>3</sup> !</p>
+        <i class="bi bi-trash-fill"></i>
         {% if is_authenticated %}
             <p>Vous êtes connecté en tant que {{ current_user.username }}.</p>
             <div class="gap-2 m-3">

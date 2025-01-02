@@ -46,3 +46,11 @@
 #suggestions-list li:hover {
     background-color: #f0f0f0;
 }
+
+#delete {
+  display: none;
+}
+
+#delete:hover {
+  display: block;
+} 

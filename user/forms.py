@@ -61,8 +61,16 @@ class RegisterForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
+        mail = cleaned_data.get('mail')
+        username = cleaned_data.get('username')
         password = cleaned_data.get('password')
         password_confirm = cleaned_data.get('password_confirm')
+
+        if User.objects.filter(mail=mail).exclude(username=username).exists():
+            raise forms.ValidationError('Cette adresse email est déjà utilisée.')
+
+        if User.objects.filter(username=username).exclude(mail=mail).exists():
+            raise forms.ValidationError('Ce nom d’utilisateur est déjà utilisé.')
 
         if password and password_confirm and password != password_confirm:
             raise forms.ValidationError('Les mots de passe ne correspondent pas')

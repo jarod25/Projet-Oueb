@@ -1,13 +1,28 @@
 {% extends 'room_list.html' %}
 
-{%  block chat %}
-
-    {% for message in messages %}
-        <div class="message">
-            <strong>{{ message.user.username }}</strong>
-            <span>{{ message.created_at|date:"SHORT_DATETIME_FORMAT" }}</span>
-            <p>{{ message.content }}</p>
+{% block chat %}
+    <div class="chat-room">
+        <h2>Salon : {{ room.name }}</h2>
+            
+        <div class="messages-container">
+            {% for message in messages %}
+                <div class="message">
+                    <p>
+                        <strong>{{ message.author.username }} :</strong>
+                        <strong>{{ message.user.username }}</strong> 
+                        {{ message.timestamp|date:"d/m/Y h:i a" }}
+                        {{ message.content }}
+                    </p>
+                </div>
+            {% empty %}
+                <p>Aucun message dans ce salon pour le moment. Soyez le premier à écrire !</p>
+            {% endfor %}
         </div>
-    {% endfor %}
-
+        
+        <form method="post" action="{% url 'send_message' room.id %}">
+            {% csrf_token %}
+            <textarea name="content" placeholder="Écrivez votre message ici..." required></textarea>
+            <button type="submit">Envoyer</button>
+        </form>
+    </div>
 {% endblock %}

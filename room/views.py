@@ -1,14 +1,20 @@
 from user.models import User
 from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Room, Invitation, UserStatus
+from .models import Room, Invitation, UserStatus, Message
 from user import login_required
 
 
 @login_required
 def room_list_view(request):
-    all_rooms = Room.objects.all()
-    return render(request, "room_list.html", {"rooms": all_rooms})
+    user_id = request.session.get('user_id')
+    user = User.objects.get(id=user_id)
+    
+    # Filtrer les salons où l'utilisateur est membre
+    user_rooms = Room.objects.filter(members=user)
+    
+    return render(request, "room_list.html", {"rooms": user_rooms})
 
 
 @login_required
@@ -38,6 +44,37 @@ def create_room_view(request):
 
     # Afficher la page de création de salon pour les requêtes GET
     return render(request, "create_room.html")
+
+@login_required
+def delete_room_view(request, room_id):
+    room = get_object_or_404(Room, id=room_id)
+    room.delete()
+    return redirect("room_list")
+
+@login_required
+def room_detail_view(request, room_id):
+    room = get_object_or_404(Room, id=room_id)
+    messages = room.messages.order_by('sent_at', 'id')
+    rooms = Room.objects.all()  # Liste des salons
+    return render(request, "room_details.html", {
+        "room": room,
+        "messages": messages,
+        "rooms": rooms
+    })
+
+
+@require_POST
+@login_required
+def send_message_view(request, room_id):
+    room = get_object_or_404(Room, id=room_id)
+    user = User.objects.get(id=request.session.get('user_id'))
+    content_message = request.POST.get("content")
+
+    if content_message:
+        Message.objects.create(content=content_message, room=room, author=user)
+
+    # Redirige vers la même page pour éviter tout problème de double affichage
+    return redirect("room_detail", room_id=room.id)
 
 def search_users(request):
     query = request.GET.get('q', '')

@@ -54,3 +54,10 @@
 #delete:hover {
   display: block;
 } 
+
+.message-container {
+    height: 400px; /* Définissez la hauteur selon vos besoins */
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+}

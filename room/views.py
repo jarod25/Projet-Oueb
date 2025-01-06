@@ -76,9 +76,10 @@ def send_message_view(request, room_id):
     # Redirige vers la même page pour éviter tout problème de double affichage
     return redirect("room_detail", room_id=room.id)
 
-def search_users(request):
-    query = request.GET.get('q', '')
-    users = User.objects.filter(username__icontains=query)
+def search_users(request, room_id):
+    user = User.objects.get(id=request.session.get('user_id'))
+    query = request.GET.get("q")
+    users = User.objects.exclude(id=user.id).filter(username__icontains=query)
     results = [user.username for user in users]
     return JsonResponse(results, safe=False)
 
@@ -122,6 +123,7 @@ def manage_invitation_view(request, invitation_id):
             invitation.status = "accepted"
             invitation.save()
             invitation.room.members.add(user)
+            UserStatus.objects.create(user=user, room=invitation.room, status="user")
         elif response == "decline":
             invitation.status = "declined"
             invitation.save()

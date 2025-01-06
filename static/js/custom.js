@@ -2,9 +2,9 @@
 $(document).ready(function () {
     $('#receiver').on('input', function () {
         let query = $(this).val();
-        if (query.length > 2) {
+        if (query.length > 1) {
             $.ajax({
-                url: '{% url "search_users" %}',
+                url: 'search_users',
                 data: {'q': query},
                 success: function (data) {
                     $('#suggestions-list').empty();

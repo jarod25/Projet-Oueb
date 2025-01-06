@@ -4,6 +4,9 @@ from django.views.decorators.http import require_POST
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Room, Invitation, UserStatus, Message
 from user import login_required
+from django.utils.timezone import now
+from datetime import timedelta
+from django.contrib import messages
 
 
 @login_required
@@ -26,9 +29,8 @@ def create_room_view(request):
         user = User.objects.get(id=user_id)
         # Vérifier si un salon avec le même nom existe déjà
         if Room.objects.filter(name=room_name).exists():
-            return render(request, "create_room.html", {
-                "error": "Un salon avec ce nom existe déjà."
-            })
+            messages.error(request, "Un salon avec le même nom existe déjà.")
+            return render(request, "create_room.html")
 
         # Créer le salon
         room = Room.objects.create(name=room_name)
@@ -53,13 +55,16 @@ def delete_room_view(request, room_id):
 
 @login_required
 def room_detail_view(request, room_id):
+    user = User.objects.get(id=request.session.get('user_id'))
     room = get_object_or_404(Room, id=room_id)
     messages = room.messages.order_by('sent_at', 'id')
-    rooms = Room.objects.all()  # Liste des salons
+    rooms = Room.objects.filter(members=user)  # Liste des salons
     return render(request, "room_details.html", {
         "room": room,
-        "messages": messages,
-        "rooms": rooms
+        "room_messages": messages,
+        "rooms": rooms,
+        "today": now(),
+        "yesterday": now().date() - timedelta(days=1)
     })
 
 

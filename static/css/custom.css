@@ -1,7 +1,9 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat:400,600,700');
+@import url('https://fonts.googleapis.com/css?family=Catamaran:400,800');
+
 * {
     margin: 0;
     padding: 0;
-    text-decoration: none;
 }
 
 /* Color theme */
@@ -18,15 +20,12 @@
 
 /* Custom CSS for the footer */
 .footer-custom {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    height: 7vh;
     background-color: var(--light-color);
     color: var(--secondary-color);
     text-align: center;
-    line-height: 4vh;
+    height: auto;
+    z-index: 1030;
+    box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.1);
 }
 
 /* Custom CSS for the search bar */
@@ -55,37 +54,381 @@
 }
 
 /* Custom CSS for the room list */
-#delete-icon {
-    display: none;
+.list-unstyled {
+    padding: 0;
+    margin: 0;
 }
 
-#room_list {
-    height: 30px;
+.room-item {
+    background-color: white;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
 }
-#room_list a {
+
+.room-item:hover {
+    background-color: #e9ecef;
+}
+
+.room-link {
     text-decoration: none;
-    color: black;
+    color: #212529;
+    flex-grow: 1;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
-#room_list a:first-child {
-    display: inline-block;
+.delete-icon {
+    color: #dc3545;
+    transition: opacity 0.3s ease, color 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+    margin-left: 8px;
 }
 
-#room_list:hover #delete-icon {
-    text-align: end;
-    display: inline;
-    height: 30px;
+.room-item:hover .delete-icon {
+    opacity: 1;
+    pointer-events: auto;
 }
 
-#delete-icon:hover {
-    display: block;
-    color: red;
+.delete-icon:hover {
+    color: #a71d2a;
 }
+
+@media (max-width: 768px) {
+    .room-item {
+        flex-wrap: wrap;
+    }
+
+    .delete-icon {
+        margin-top: 0.5rem;
+    }
+}
+
 
 /* Custom CSS for the room */
-.message-container {
-    height: 400px; /* Définissez la hauteur selon vos besoins */
+.message-date {
+    font-style: italic;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+#message-content {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+#messages-container {
+    height: 67vh;
     overflow-y: auto;
-    border: 1px solid #ccc;
+    word-wrap: break-word;
+    padding-bottom: 10px;
+}
+
+#messages-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#messages-container::-webkit-scrollbar-thumb {
+    background-color: #007bff;
+    border-radius: 4px;
+}
+
+#messages-container::-webkit-scrollbar-thumb:hover {
+    background-color: #0056b3;
+}
+
+#messages-container::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+}
+
+/* Zone de saisie */
+.input-container {
+    display: flex;
+    align-items: center;
+}
+
+.input-text {
+    flex: 1;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    resize: none;
+    height: 45px;
+    width: 51vw;
+    margin-right: 10px;
+    padding: 1vh;
+    margin-bottom: 7vh;
+}
+
+.input-text:focus {
+    outline: none;
+}
+
+.send-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
     padding: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+    width: 45px;
+    height: 45px;
+    font-size: 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Responsive Ajustements */
+@media (max-width: 768px) {
+    #input-text {
+        font-size: 0.9rem;
+    }
+
+    #button-send {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f8f9fa;
+    color: #007bff;
+    font-size: 1.5rem;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    position: relative;
+}
+
+.btn-icon:hover {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.btn-icon::after {
+    content: 'Inviter des utilisateurs';
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #000;
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    opacity: 0;
+    white-space: nowrap;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.btn-icon:hover::after {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .btn-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 1.2rem;
+    }
+
+    .btn-icon::after {
+        font-size: 0.65rem;
+    }
+}
+
+.chat-icon {
+    font-size: 1.5rem;
+}
+
+/* Custom CSS for the 404 error page */
+.error-container {
+    text-align: center;
+    font-size: 106px;
+    font-family: 'Catamaran', sans-serif;
+    font-weight: 800;
+    margin: 70px 15px;
+}
+
+.error-container > span {
+    display: inline-block;
+    position: relative;
+}
+
+.error-container > span.four {
+    width: 136px;
+    height: 43px;
+    border-radius: 999px;
+    background: linear-gradient(140deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.07) 43%, transparent 44%, transparent 100%),
+    linear-gradient(105deg, transparent 0%, transparent 40%, rgba(0, 0, 0, 0.06) 41%, rgba(0, 0, 0, 0.07) 76%, transparent 77%, transparent 100%),
+    linear-gradient(to right, #d89ca4, #e27b7e);
+}
+
+.error-container > span.four:before,
+.error-container > span.four:after {
+    content: '';
+    display: block;
+    position: absolute;
+    border-radius: 999px;
+}
+
+.error-container > span.four:before {
+    width: 43px;
+    height: 156px;
+    left: 60px;
+    bottom: -43px;
+    background: linear-gradient(128deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.07) 40%, transparent 41%, transparent 100%),
+    linear-gradient(116deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.07) 50%, transparent 51%, transparent 100%),
+    linear-gradient(to top, #99749D, #B895AB, #CC9AA6, #D7969E, #E0787F);
+}
+
+.error-container > span.four:after {
+    width: 137px;
+    height: 43px;
+    transform: rotate(-49.5deg);
+    left: -18px;
+    bottom: 36px;
+    background: linear-gradient(to right, #99749D, #B895AB, #CC9AA6, #D7969E, #E0787F);
+}
+
+
+/*.five {
+    position: relative;
+}
+
+.block {
+    position: absolute;
+    border-radius: 999px;
+}
+
+.top {
+    background: linear-gradient(to left, #99749D, #B895AB, #CC9AA6, #D7969E, #E0787F);
+    width: 150px;
+    height: 43px;
+    top: 0;
+    left: 0;
+}
+
+.middle {
+    background: linear-gradient(to right, #99749D, #B895AB, #CC9AA6, #D7969E, #E0787F);
+    width: 150px;
+    height: 43px;
+    top: 55px;
+    left: 0;
+}
+
+.bottom {
+    background: linear-gradient(to left, #99749D, #B895AB, #CC9AA6, #D7969E, #E0787F);
+    width: 150px;
+    height: 43px;
+    bottom: -156px;
+    left: 0;
+}
+
+.vertical {
+    width: 98px;
+    height: 43px;
+    left: -29px;
+    top: 27px;
+    transform: rotate(-90deg);
+    background: linear-gradient(to right, #99749D, #B895AB, #CC9AA6, #D7969E, #E0787F);
+}
+
+.round {
+    width: 100px;
+    height: 43px;
+    left: 78px;
+    top: 84px;
+    transform: rotate(-90deg);
+    background: linear-gradient(to right, #99749D, #B895AB, #CC9AA6, #D7969E, #E0787F);
+}*/
+
+
+.error-container > span.zero {
+    vertical-align: text-top;
+    width: 156px;
+    height: 156px;
+    border-radius: 999px;
+    background: linear-gradient(-45deg, transparent 0%, rgba(0, 0, 0, 0.06) 50%, transparent 51%, transparent 100%),
+    linear-gradient(to top right, #99749D, #99749D, #B895AB, #CC9AA6, #D7969E, #ED8687, #ED8687);
+    overflow: hidden;
+    animation: bgshadow 5s infinite;
+}
+
+.error-container > span.zero:before {
+    content: '';
+    display: block;
+    position: absolute;
+    transform: rotate(45deg);
+    width: 90px;
+    height: 90px;
+    background-color: transparent;
+    left: 0px;
+    bottom: 0px;
+    background: linear-gradient(95deg, transparent 0%, transparent 8%, rgba(0, 0, 0, 0.07) 9%, transparent 50%, transparent 100%),
+    linear-gradient(85deg, transparent 0%, transparent 19%, rgba(0, 0, 0, 0.05) 20%, rgba(0, 0, 0, 0.07) 91%, transparent 92%, transparent 100%);
+}
+
+.error-container > span.zero:after {
+    content: '';
+    display: block;
+    position: absolute;
+    border-radius: 999px;
+    width: 70px;
+    height: 70px;
+    left: 43px;
+    bottom: 43px;
+    background: #FDFAF5;
+    box-shadow: -2px 2px 2px 0px rgba(0, 0, 0, 0.1);
+}
+
+.screen-reader-text {
+    position: absolute;
+    top: -9999em;
+    left: -9999em;
+}
+
+@keyframes bgshadow {
+    0% {
+        box-shadow: inset -160px 160px 0px 5px rgba(0, 0, 0, 0.4);
+    }
+    45% {
+        box-shadow: inset 0px 0px 0px 0px rgba(0, 0, 0, 0.1);
+    }
+    55% {
+        box-shadow: inset 0px 0px 0px 0px rgba(0, 0, 0, 0.1);
+    }
+    100% {
+        box-shadow: inset 160px -160px 0px 5px rgba(0, 0, 0, 0.4);
+    }
+}
+
+.more-link {
+    font-size: 14px;
+    text-transform: uppercase;
+    font-weight: 600;
+    background-color: #de7e85;
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: #fff;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.more-link:hover {
+    background-color: #994a51;
 }

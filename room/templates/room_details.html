@@ -1,36 +1,47 @@
 {% extends 'room_list.html' %}
 
 {% block chat %}
-    <div class="chat-room">
-        <h2>Salon : {{ room.name }}</h2>
-        <a href="{% url 'invite_user' room.id %}">Inviter un utilisateur</a>
-            
-        <div class="messages-container">
-            {% for message in room_messages %}
-                <div class="message">
-                    <p>
-                        <strong>{{ message.author.username }} </strong>
-                        {% if message.sent_at|date:'d/m/Y' == today|date:'d/m/Y' %}
-                            Aujourd'hui à {{ message.sent_at|date:'H:i' }}
-                        {% elif message.sent_at|date:'d/m/Y' == yesterday|date:'d/m/Y' %}
-                            Hier à {{ message.sent_at|date:'H:i' }}
-                        {% else %}
-                            Le {{ message.sent_at|date:'d/m/Y' }} à {{ message.sent_at|date:'H:i' }}
-                        {% endif %}<br>
-                        {{ message.content }}
-                    </p>
-                </div>
-            {% empty %}
-                <p>Aucun message dans ce salon pour le moment. Soyez le premier à écrire !</p>
-            {% endfor %}
-        </div>
-        
-        <form method="post" action="{% url 'send_message' room.id %}">
-            {% csrf_token %}
-            <label>
-                <input type="text" name="content" placeholder="Écrivez votre message ici..." required>
-            </label>
-            <button type="submit">Envoyer</button>
-        </form>
+<div class="chat-room container">
+    <!-- Header du Salon -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="bi bi-chat-left-text-fill chat-icon"></i> {{ room.name }}</h2>
+        <a href="{% url 'invite_user' room.id %}" class="btn-icon">
+            <i class="bi bi-person-plus-fill"></i>
+        </a>
     </div>
+
+    <!-- Conteneur des Messages -->
+    <div class="messages-container p-3 border rounded" id="messages-container">
+        {% for message in room_messages %}
+            <div class="message mb-3">
+                <p class="mb-1">
+                    <strong>{{ message.author.username }}</strong>
+                    {% if message.sent_at|date:'d/m/Y' == today|date:'d/m/Y' %}
+                        <span class="message-date text-muted">Aujourd'hui à {{ message.sent_at|date:'H:i' }}</span>
+                    {% elif message.sent_at|date:'d/m/Y' == yesterday|date:'d/m/Y' %}
+                        <span class="message-date text-muted">Hier à {{ message.sent_at|date:'H:i' }}</span>
+                    {% else %}
+                        <span class="message-date text-muted">Le {{ message.sent_at|date:'d/m/Y' }} à {{ message.sent_at|date:'H:i' }}</span>
+                    {% endif %}
+                </p>
+                <p class="message-content">
+                    {{ message.content|linebreaksbr }}
+                </p>
+            </div>
+        {% empty %}
+            <p>Aucun message dans ce salon pour le moment. Soyez le premier à écrire !</p>
+        {% endfor %}
+    </div>
+
+    <!-- Zone d'Input -->
+    <form class="input-container" method="post" action="{% url 'send_message' room.id %}">
+    {% csrf_token %}
+        <label>
+            <textarea class="input-text" name="content" placeholder="Écrivez votre message ici..." required></textarea>
+        </label>
+        <button type="submit" class="send-button" title="Envoyer">
+      ➤
+    </button>
+  </form>
+</div>
 {% endblock %}

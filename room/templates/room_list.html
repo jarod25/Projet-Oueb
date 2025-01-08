@@ -1,25 +1,30 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <a href="{% url 'invitations_list' %}">Voir les invitations</a>
-    <div class="row">
-        <div class="col-4">
-            <h1>Vos salons</h1>
-            <ul>
-                {% for room in rooms %}
-                    <li id="room_list">
-                        <a href="{% url 'room_detail' room.id %}">{{ room.name }}</a>
-                        <a id="delete-icon" href="{% url 'delete_room' room.id %}" onclick="return confirm('Êtes vous sur de vouloir supprimer le salon ?')"><i class="bi bi-trash-fill"></i></a>
-                    </li>
-                {% endfor %}
-            </ul>
-            <a href="{% url 'create_room' %}">➕ Créer un salon</a>
+    <div class="container">
+        <a href="{% url 'invitations_list' %}" class="btn btn-link">Voir les invitations</a>
+        <div class="row">
+            <div class="col-12 col-md-2">
+                <h1>Vos salons</h1>
+                <ul class="list-unstyled">
+                    {% for room in rooms %}
+                        <li class="room-item d-flex align-items-center justify-content-between p-2">
+                            <a href="{% url 'room_detail' room.id %}"
+                               class="room-link text-truncate">{{ room.name }}</a>
+                            <a href="{% url 'delete_room' room.id %}" class="delete-icon ms-2"
+                               onclick="return confirm('Êtes vous sur de vouloir supprimer le salon ?')">
+                                <i class="bi bi-trash-fill"></i>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <a href="{% url 'create_room' %}" class="btn btn-outline-secondary mt-3">➕ Créer un salon</a>
+            </div>
+            <div class="col-12 col-md-10">
+                {% block chat %}
+                    <h1>Choisissez un salon pour commencer à discuter</h1>
+                {% endblock %}
+            </div>
         </div>
-        <div class="col-8">
-            {% block chat %}
-                <h1>Choisissez un salon pour commencer à discuter</h1>
-            {% endblock %}
-        </div>
-        
     </div>
 {% endblock %}

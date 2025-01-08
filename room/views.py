@@ -56,6 +56,8 @@ def delete_room_view(request, room_id):
 @login_required
 def room_detail_view(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
+    if not Room.objects.filter(id=room_id, members=user).exists():
+        return redirect("room_list")
     room = get_object_or_404(Room, id=room_id)
     room_messages = room.messages.order_by('sent_at', 'id')
     rooms = Room.objects.filter(members=user)  # Liste des salons
@@ -111,7 +113,7 @@ def invite_user_view(request, room_id):
             })
 
         Invitation.objects.create(sender=user, receiver=receiver, room=room)
-        return redirect("room_list")
+        return redirect("room_detail", room_id=room.id)
 
 
 @login_required

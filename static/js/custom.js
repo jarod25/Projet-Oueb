@@ -23,3 +23,14 @@ $(document).ready(function () {
         $('#suggestions-list').empty();
     });
 });
+
+$(document).ready(function () {
+    $('#input-text').on('input', function () {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+
+    let messagesContainer = $('#input-container');
+    messagesContainer.scrollTop(messagesContainer.prop("scrollHeight"));
+});
+

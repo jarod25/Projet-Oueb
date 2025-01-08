@@ -1,8 +1,18 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <div class="container">
-        <h1>404</h1>
-        <p>La page que vous cherchez n'existe pas.</p>
+    <div class="container text-center mt-5">
+        <h1>Erreur 404</h1>
+        <p class="zoom-area">
+            Oups ! La page que vous cherchez semble introuvable. Peut-être qu'elle a été déplacée ou n'existe pas.
+        </p>
+        <section class="error-container">
+            <span class="four"><span class="screen-reader-text">4</span></span>
+            <span class="zero"><span class="screen-reader-text">0</span></span>
+            <span class="four"><span class="screen-reader-text">4</span></span>
+        </section>
+        <div class="link-container">
+            <a href="{% url 'index' %}" class="more-link">Retour à l'accueil</a>
+        </div>
     </div>
 {% endblock %}

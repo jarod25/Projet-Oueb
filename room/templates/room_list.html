@@ -7,12 +7,9 @@
             <h1>Vos salons</h1>
             <ul>
                 {% for room in rooms %}
-                    <li>
+                    <li id="room_list">
                         <a href="{% url 'room_detail' room.id %}">{{ room.name }}</a>
-                        <form method="post" action="{% url 'delete_room' room.id %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
-                        </form>
+                        <a id="delete-icon" href="{% url 'delete_room' room.id %}" onclick="return confirm('Êtes vous sur de vouloir supprimer le salon ?')"><i class="bi bi-trash-fill"></i></a>
                     </li>
                 {% endfor %}
             </ul>

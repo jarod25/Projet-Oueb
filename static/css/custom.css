@@ -1,6 +1,7 @@
 * {
     margin: 0;
     padding: 0;
+    text-decoration: none;
 }
 
 /* Color theme */
@@ -54,13 +55,32 @@
 }
 
 /* Custom CSS for the room list */
-#delete {
-  display: none;
+#delete-icon {
+    display: none;
 }
 
-#delete:hover {
-  display: block;
-} 
+#room_list {
+    height: 30px;
+}
+#room_list a {
+    text-decoration: none;
+    color: black;
+}
+
+#room_list a:first-child {
+    display: inline-block;
+}
+
+#room_list:hover #delete-icon {
+    text-align: end;
+    display: inline;
+    height: 30px;
+}
+
+#delete-icon:hover {
+    display: block;
+    color: red;
+}
 
 /* Custom CSS for the room */
 .message-container {

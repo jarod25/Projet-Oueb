@@ -9,7 +9,7 @@
             {% for message in room_messages %}
                 <div class="message">
                     <p>
-                        <strong>{{ message.author.username }} :</strong>
+                        <strong>{{ message.author.username }} </strong>
                         {% if message.sent_at|date:'d/m/Y' == today|date:'d/m/Y' %}
                             Aujourd'hui à {{ message.sent_at|date:'H:i' }}
                         {% elif message.sent_at|date:'d/m/Y' == yesterday|date:'d/m/Y' %}

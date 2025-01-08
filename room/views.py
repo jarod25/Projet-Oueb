@@ -57,11 +57,11 @@ def delete_room_view(request, room_id):
 def room_detail_view(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
     room = get_object_or_404(Room, id=room_id)
-    messages = room.messages.order_by('sent_at', 'id')
+    room_messages = room.messages.order_by('sent_at', 'id')
     rooms = Room.objects.filter(members=user)  # Liste des salons
     return render(request, "room_details.html", {
         "room": room,
-        "room_messages": messages,
+        "room_messages": room_messages,
         "rooms": rooms,
         "today": now(),
         "yesterday": now().date() - timedelta(days=1)

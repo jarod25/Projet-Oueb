@@ -17,8 +17,9 @@ def login_view(request):
     if request.method == 'POST':
         form = forms.LoginForm(request.POST)
         if form.is_valid():
-            form.login(request)
-            return redirect('room_list')
+            user = form.login(request)
+            if user is not None:
+                return redirect('room_list')
     return render(request, 'login.html', {'form': form})
 
 

@@ -19,19 +19,18 @@ class LoginForm(forms.Form):
         userlogin = self.cleaned_data['userlogin']
         password = self.cleaned_data['password']
 
-        if '@' in userlogin:
-            try:
+        try:
+            if '@' in userlogin:
                 user = User.objects.get(mail=userlogin)
-            except User.DoesNotExist:
-                raise forms.ValidationError('Aucun compte ne correspond à ces informations de connexion')
-        else:
-            try:
+            else:
                 user = User.objects.get(username=userlogin)
-            except User.DoesNotExist:
-                raise forms.ValidationError('Aucun compte ne correspond à ces informations de connexion')
+        except User.DoesNotExist:
+            self.add_error('userlogin', 'Aucun compte ne correspond à ces informations de connexion')
+            return None
 
         if not check_password(password, user.password):
-            raise forms.ValidationError('Mot de passe incorrect')
+            self.add_error('password', 'Mot de passe incorrect')
+            return None
 
         request.session['user_id'] = user.id
         return user
@@ -67,13 +66,13 @@ class RegisterForm(forms.Form):
         password_confirm = cleaned_data.get('password_confirm')
 
         if User.objects.filter(mail=mail).exclude(username=username).exists():
-            raise forms.ValidationError('Cette adresse email est déjà utilisée.')
+            self.add_error('mail', 'Cette adresse email est déjà utilisée.')
 
         if User.objects.filter(username=username).exclude(mail=mail).exists():
-            raise forms.ValidationError('Ce nom d’utilisateur est déjà utilisé.')
+            self.add_error('username', 'Ce nom d’utilisateur est déjà utilisé.')
 
         if password and password_confirm and password != password_confirm:
-            raise forms.ValidationError('Les mots de passe ne correspondent pas')
+            self.add_error('password_confirm', 'Les mots de passe ne correspondent pas.')
 
         return cleaned_data
 
@@ -109,10 +108,10 @@ class ProfileForm(forms.ModelForm):
         username = cleaned_data.get('username')
 
         if User.objects.filter(mail=mail).exclude(username=username).exists():
-            raise forms.ValidationError('Cette adresse email est déjà utilisée.')
+            self.add_error('mail', 'Cette adresse email est déjà utilisée.')
 
         if User.objects.filter(username=username).exclude(mail=mail).exists():
-            raise forms.ValidationError('Ce nom d’utilisateur est déjà utilisé.')
+            self.add_error('username', 'Ce nom d’utilisateur est déjà utilisé.')
 
         return cleaned_data
 
@@ -153,10 +152,10 @@ class PasswordForm(forms.Form):
         password_confirm = cleaned_data.get('password_confirm')
 
         if not check_password(current_password, self.user.password):
-            raise forms.ValidationError('Le mot de passe actuel est incorrect.')
+            self.add_error('current_password', 'Mot de passe incorrect.')
 
         if password and password_confirm and password != password_confirm:
-            raise forms.ValidationError('Les mots de passe ne correspondent pas.')
+            self.add_error('password_confirm', 'Les mots de passe ne correspondent pas.')
 
         return cleaned_data
 

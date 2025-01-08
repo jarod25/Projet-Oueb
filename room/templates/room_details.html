@@ -25,12 +25,12 @@
             {% endfor %}
         </div>
         
-        <form method="post" action="{% url 'send_message' room.id %}">
+        <form method="post" id="message" action="{% url 'send_message' room.id %}">
             {% csrf_token %}
             <label>
-                <input type="text" name="content" placeholder="Écrivez votre message ici..." required>
+                <input id="msg" type="text" name="content" placeholder="Écrivez votre message ici..." required>
             </label>
-            <button type="submit">Envoyer</button>
+            <button type="submit" class="submit">Envoyer</button>
         </form>
     </div>
 {% endblock %}

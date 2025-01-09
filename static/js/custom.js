@@ -1,12 +1,10 @@
-
-
 $(document).ready(function () {
     $('#receiver').on('input', function () {
         let query = $(this).val();
         if (query.length > 1) {
             $.ajax({
                 url: 'search_users',
-                data: {'q': query},
+                data: { 'q': query },
                 success: function (data) {
                     $('#suggestions-list').empty();
                     data.forEach(function (username) {
@@ -18,18 +16,30 @@ $(document).ready(function () {
             $('#suggestions-list').empty();
         }
     });
+
+    $(document).on('click', '#suggestions-list li', function () {
+        $('#receiver').val($(this).text());
+        $('#suggestions-list').empty();
+    });
+
     let lastMessageId = null; // Track the ID of the last displayed message
 
-    function fetchMessages() {
+    function loadMessages(clearContainer = false) {
         $.ajax({
             url: window.location.href, // Use the current URL
-            data: { last_id: lastMessageId }, // Pass the last message ID
+            data: { last_id: lastMessageId || 0 }, // Pass the last message ID (or 0 if null)
             success: function (data) {
-                // Assuming the server returns only new messages in JSON format
                 if (data.new_messages && data.new_messages.length > 0) {
+                    const messageContainer = $(".messages-container");
+
+                    // Clear the container if `clearContainer` is true (e.g., on page refresh)
+                    if (clearContainer) {
+                        messageContainer.empty();
+                    }
+
+                    // Append each new message to the container
                     data.new_messages.forEach(function (message) {
-                        // Append each new message to the message-container
-                        $(".messages-container").append(`
+                        messageContainer.append(`
                             <div class="message">
                                 <p>
                                     <strong>${message.author}</strong>
@@ -45,9 +55,6 @@ $(document).ready(function () {
         });
     }
 
-    // Fetch new messages every 2 seconds
-    setInterval(fetchMessages, 500);
-
     // Handle message submission
     $(document).on("submit", "#message", function (e) {
         e.preventDefault();
@@ -61,8 +68,16 @@ $(document).ready(function () {
             success: function () {
                 // Clear the input field after sending the message
                 $("#msg").val("");
-                fetchMessages(); // Optionally fetch immediately after sending
+                loadMessages(false); // Fetch new messages immediately after sending
             },
         });
     });
+
+    // Load messages on page load (clearContainer = true ensures no duplicates)
+    loadMessages(true);
+
+    // Fetch new messages every 2 seconds (clearContainer = false to append new ones only)
+    setInterval(function () {
+        loadMessages(false);
+    }, 2000);
 });

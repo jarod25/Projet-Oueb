@@ -26,8 +26,9 @@ $(document).ready(function () {
         $('#suggestions-list').empty();
     });
     
+    
     setInterval(function(){
-        $( ".message" ).load(window.location.href + " .message" );
+        $( ".message-container" ).load(window.location.href + " .message" );
     }, 2000)
     
 });
@@ -36,9 +37,9 @@ $(document).on('submit', '#message', function(e){
     e.preventDefault();
     $.ajax({
         type: 'POST',
-        url: "",
+        url: $('#message').attr('action'),
         data: {
-            message: $('#msg').val(),
+            content: $('#msg').val(),
             csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
         }
     });

@@ -59,8 +59,32 @@ def room_detail_view(request, room_id):
     if not Room.objects.filter(id=room_id, members=user).exists():
         return redirect("room_list")
     room = get_object_or_404(Room, id=room_id)
-    room_messages = room.messages.order_by('sent_at', 'id')
-    rooms = Room.objects.filter(members=user)  # Liste des salons
+    rooms = Room.objects.filter(members=user)
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Check if the request is AJAX
+        last_id = request.GET.get("last_id")
+
+        # Handle missing or invalid `last_id`
+        try:
+            last_id = int(last_id) if last_id else 0
+        except ValueError:
+            last_id = 0  # Default to 0 if `last_id` is invalid
+
+        new_messages = room.messages.filter(id__gt=last_id).order_by("sent_at", "id")
+        response_data = {
+            "new_messages": [
+                {
+                    "id": message.id,
+                    "author": message.author.username,
+                    "content": message.content,
+                    "timestamp": message.sent_at.strftime("%d/%m/%Y %H:%M"),
+                }
+                for message in new_messages
+            ]
+        }
+        return JsonResponse(response_data)
+
+    room_messages = room.messages.order_by("sent_at", "id")
     return render(request, "room_details.html", {
         "room": room,
         "room_messages": room_messages,

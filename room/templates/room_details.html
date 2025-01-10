@@ -34,12 +34,12 @@
     </div>
 
     <!-- Zone d'Input -->
-    <form class="input-container" method="post" action="{% url 'send_message' room.id %}">
+    <form class="input-container" id="message" method="post" action="{% url 'send_message' room.id %}">
     {% csrf_token %}
         <label>
-            <textarea class="input-text" name="content" placeholder="Écrivez votre message ici..." required></textarea>
+            <textarea id="msg" class="input-text" name="content" placeholder="Écrivez votre message ici..." required></textarea>
         </label>
-        <button type="submit" class="send-button" title="Envoyer">
+        <button type="submit" class="send-button submit" title="Envoyer">
       ➤
     </button>
   </form>

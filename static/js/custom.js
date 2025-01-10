@@ -23,6 +23,7 @@ $(document).ready(function () {
         $('#suggestions-list').empty();
     });
 
+    // Load messages and handle message submission
     let lastMessageId = null; // Track the ID of the last displayed message
 
     function loadMessages(clearContainer = false) {
@@ -87,6 +88,7 @@ $(document).ready(function () {
     $('#input-text').on('input', function () {
         this.style.height = 'auto';
         this.style.height = (this.scrollHeight) + 'px';
+        this.style.zIndex = '0';
     });
 
     let messagesContainer = $('#input-container');

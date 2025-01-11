@@ -25,7 +25,7 @@ $(document).ready(function () {
 
     // Load messages and handle message submission
     let lastMessageId = null; // Track the ID of the last displayed message
-
+/*
     function loadMessages(clearContainer = false) {
         $.ajax({
             url: window.location.href, // Use the current URL
@@ -42,12 +42,15 @@ $(document).ready(function () {
                     // Append each new message to the container
                     data.new_messages.forEach(function (message) {
                         messageContainer.append(`
-                            <div class="message">
+                            <div class="message" data-message-id="${message.id}">
                                 <p>
                                     <strong>${message.author}</strong>
                                     ${message.timestamp}<br>
                                     ${message.content}
                                 </p>
+                                <button class="delete-message btn btn-sm btn-danger" data-delete-url="${message.delete_url}" title="Supprimer ce message">
+                                    <i class="bi bi-trash-fill"></i> Supprimer
+                                </button>
                             </div>
                         `);
                         lastMessageId = message.id; // Update the last message ID
@@ -56,7 +59,7 @@ $(document).ready(function () {
             },
         });
     }
-
+*/
     // Handle message submission
     $(document).on("submit", "#message", function (e) {
         e.preventDefault();
@@ -95,3 +98,26 @@ $(document).ready(function () {
     messagesContainer.scrollTop(messagesContainer.prop("scrollHeight"));
 });
 
+$(document).on("click", ".delete-message", function (e) {
+    e.preventDefault();
+    const button = $(this);
+    const deleteUrl = button.data("delete-url");
+    console.log(deleteUrl)
+
+    if (confirm("Voulez-vous vraiment supprimer ce message ?")) {
+        $.ajax({
+            url: deleteUrl,
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+            },
+            success: function () {
+                // Supprimer le message du DOM après suppression
+                button.closest(".message").remove();
+            },
+            error: function () {
+                alert("Une erreur s'est produite lors de la suppression du message.");
+            },
+        });
+    }
+});

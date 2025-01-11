@@ -25,6 +25,9 @@
                                 <span class="message-date text-muted">Le {{ message.sent_at|date:'d/m/Y' }} à {{ message.sent_at|date:'H:i' }}</span>
                             {% endif %}
                         </p>
+                        <ul>
+                            <li><a href="{% url 'delete-message' message.pk %}"><i class="bi bi-trash-fill"></i>delete</a></li>
+                        </ul>
                         <p class="message-content">
                             {{ message.content|linebreaksbr }}
                         </p>

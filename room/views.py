@@ -1,5 +1,5 @@
 from user.models import User
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
 from django.views.decorators.http import require_POST
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Room, Invitation, UserStatus, Message
@@ -106,6 +106,12 @@ def send_message_view(request, room_id):
 
     # Redirige vers la même page pour éviter tout problème de double affichage
     return redirect("room_detail", room_id=room.id)
+
+@login_required
+def delete_message(request, pk):
+    message = Message.objects.get(id=pk)
+    message.delete()
+    return HttpResponseRedirect(request.META.get('HTTP_RFERER'))
 
 def search_users(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))

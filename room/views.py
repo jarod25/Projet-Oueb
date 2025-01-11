@@ -50,7 +50,11 @@ def create_room_view(request):
 @login_required
 def delete_room_view(request, room_id):
     room = get_object_or_404(Room, id=room_id)
+    if request.user != room.owner:
+        messages.error(request, "Vous n'êtes pas autorisé.e à effectuer cette action.")
+        return redirect("room_detail", room_id=room.id)
     room.delete()
+    messages.success(request, "Le salon a été supprimé avec succès.")
     return redirect("room_list")
 
 @login_required
@@ -166,3 +170,45 @@ def invitations_list_view(request):
     user = User.objects.get(id=request.session.get('user_id'))
     invitations = Invitation.objects.filter(receiver=user, status="pending")
     return render(request, "invitations_list.html", {"invitations": invitations})
+
+@login_required
+def update_user_status(request, room_id, user_id):
+    room = get_object_or_404(Room, id=room_id)
+    user_status = get_object_or_404(UserStatus, user_id=user_id, room=room)
+    # check if the user is the owner / admin of the room
+    if request.user != room.owner and not room.administrator:
+        messages.error(request, "Vous n'êtes pas autorisé.e à effectuer cette action.")
+        return redirect("room_detail", room_id=room.id)
+    action = request.POST.get("action")
+    mute_duration = request.POST.get("mute_duration")
+    if action == "mute":
+        user_status.status = "muted"
+        user_status.mute_end_time = now() + timedelta(minutes=int(mute_duration))
+        messages.success(request, "L'utilisateur {user_status.user.username} a été réduit au silence pour {mute_duration} minutes.")
+    elif action == "unmute":
+        if user_status.status == "muted":
+            user_status.status = "user"
+            user_status.mute_end_time = None
+            messages.success(request, "L'utilisateur {user_status.user.username} est de retour dans le chat.")
+    elif action == "ban":
+        user_status.status = "banned"
+        messages.success(request, "L'utilisateur {user_status.user.username} a été banni.")
+    elif action == "unban":
+        if user_status.status == "banned":
+            user_status.status = "user"
+            messages.success(request, "L'utilisateur {user_status.user.username} a été débanni.")
+    elif action == "promote":
+        if user_status.status == "user":
+            user_status.status = "administrator"
+            messages.success(request, "L'utilisateur {user_status.user.username} a été promu administrateur.")
+        elif user_status.status == "administrator":
+            messages.error(request, "L'utilisateur {user_status.user.username} est déjà administrateur.")
+    elif action == "demote":
+        if user_status.status == "administrator":
+            user_status.status = "user"
+            messages.success(request, "L'utilisateur {user_status.user.username} n'est plus administrateur.")
+    else:
+        messages.error(request, "Action non reconnue.")
+        return redirect("room_detail", room_id=room.id)
+    user_status.save()
+    return redirect("room_detail", room_id=room.id)

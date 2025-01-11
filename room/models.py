@@ -37,6 +37,7 @@ class UserStatus(models.Model):
         ],
         default='user'
     )
+    mute_end_time = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         unique_together = ('user', 'room', 'status')

@@ -19,9 +19,30 @@
                     {% endfor %}
                 </ul>
             </div>
-            <div class="col-12 col-md-10">
+            <div class="col-12 col-md-8">
                 {% block chat %}
                     <h1>Choisissez un salon pour commencer à discuter</h1>
+                {% endblock %}
+            </div>
+            <div class="col-12 col-md-2">
+                {% block user_list %}
+                    <p class="room-title">Membres</p>
+                    <ul class="list-unstyled">
+                        {% for user in users %}
+                            <li class="list-group-item d-flex align-items-center justify-content-between">
+                                <span>
+                                    <i class="bi bi-person-fill"></i> {{ user.username }}
+                                </span>
+                                {% if user == owner %}
+                                    <span class="badge bg-secondary">Propriétaire</span>
+                                {% elif user in administrators %}
+                                    <span class="badge bg-secondary">Administrateur</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Membre</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
                 {% endblock %}
             </div>
         </div>

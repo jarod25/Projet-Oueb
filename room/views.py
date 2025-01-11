@@ -64,7 +64,6 @@ def room_detail_view(request, room_id):
         return redirect("room_list")
     room = get_object_or_404(Room, id=room_id)
     rooms = Room.objects.filter(members=user)
-
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':  # Check if the request is AJAX
         last_id = request.GET.get("last_id")
 

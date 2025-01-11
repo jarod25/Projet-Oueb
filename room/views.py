@@ -197,16 +197,17 @@ def update_user_status(request, room_id, user_id):
         if user_status.status == "banned":
             user_status.status = "user"
             messages.success(request, "L'utilisateur {user_status.user.username} a été débanni.")
-    elif action == "promote":
-        if user_status.status == "user":
-            user_status.status = "administrator"
-            messages.success(request, "L'utilisateur {user_status.user.username} a été promu administrateur.")
-        elif user_status.status == "administrator":
-            messages.error(request, "L'utilisateur {user_status.user.username} est déjà administrateur.")
-    elif action == "demote":
-        if user_status.status == "administrator":
-            user_status.status = "user"
-            messages.success(request, "L'utilisateur {user_status.user.username} n'est plus administrateur.")
+    elif request.user == room.owner :
+        if action == "promote":
+            if user_status.status == "user":
+                user_status.status = "administrator"
+                messages.success(request, "L'utilisateur {user_status.user.username} a été promu administrateur.")
+            elif user_status.status == "administrator":
+                messages.error(request, "L'utilisateur {user_status.user.username} est déjà administrateur.")
+        elif action == "demote":
+            if user_status.status == "administrator":
+                user_status.status = "user"
+                messages.success(request, "L'utilisateur {user_status.user.username} n'est plus administrateur.")
     else:
         messages.error(request, "Action non reconnue.")
         return redirect("room_detail", room_id=room.id)

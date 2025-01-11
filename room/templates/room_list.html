@@ -4,7 +4,7 @@
     <div class="container">
         <div class="row">
             <div class="col-12 col-md-2">
-                <a href="{% url 'invitations_list' %}" class="btn btn-link"><i class="bi bi-envelope-fill"></i> Voir les invitations</a>
+                <a href="{% url 'invitations_list' %}" class="btn btn-link room-title"><i class="bi bi-envelope-fill"></i> Invitations</a>
                 <p class="room-title">Salons <a href="{% url 'create_room' %}" class="add-room" title="Créer un salon">+</a></p>
                 <ul class="list-unstyled">
                     {% for room in rooms %}

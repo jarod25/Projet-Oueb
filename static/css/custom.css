@@ -62,12 +62,24 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    text-decoration: none;
+    color: #2b2f32;
+    padding-left: 1vh;
+    padding-right: 1vh;
+}
+
+a[class="btn btn-link room-title"]:hover {
+    color: #949da2;
 }
 
 .add-room {
     text-decoration: none;
     color: #2b2f32;
     font-size: 2rem;
+}
+
+.add-room:hover {
+    color: #949da2;
 }
 
 .list-unstyled {
@@ -164,7 +176,7 @@
 
 #messages-container::-webkit-scrollbar-thumb {
     background-color: var(--primary-color);
-    border-radius: 4px;
+    border-radius: 0.375rem;
 }
 
 #messages-container::-webkit-scrollbar-thumb:hover {
@@ -189,7 +201,7 @@
     resize: none;
     width: 95vh;
     height: auto;
-    padding: 10px;
+    padding: 10px 10px 12px;
     margin: 0 7px;
     font-size: 1rem;
     background-color: var(--bg-chat-color);
@@ -205,7 +217,7 @@
 
 .input-text::-webkit-scrollbar-thumb {
     background-color: var(--primary-color);
-    border-radius: 4px;
+    border-radius: 0.375rem;
 }
 
 .input-text::-webkit-scrollbar-thumb:hover {
@@ -223,15 +235,23 @@
     padding: 10px;
     cursor: pointer;
     font-size: 2rem;
+    margin-left: -8px;
+    border-bottom-right-radius: 0.375rem;
 }
 
 .emoji-button {
     background-color: var(--bg-chat-color);
     color: var(--primary-color);
     border: none;
-    padding: 10px;
+    padding: 13px 13px 15px;
     cursor: pointer;
     font-size: 2rem;
+    border-bottom-left-radius: 0.375rem;
+}
+
+.align-items-input {
+    display: flex;
+    align-items: center;
 }
 
 /* Responsive Ajustements */

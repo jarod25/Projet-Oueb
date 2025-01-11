@@ -35,19 +35,21 @@
             </div>
 
             <!-- Zone d'Input -->
-            <form class="input-container" id="message" method="post" action="{% url 'send_message' room.id %}">
-                {% csrf_token %}
+            <div class="align-items-input">
                 <button class="emoji-button" title="Ajouter un emoji">
                     <i class="bi bi-emoji-smile-fill"></i>
                 </button>
-                <label>
+                <form class="input-container" id="message" method="post" action="{% url 'send_message' room.id %}">
+                    {% csrf_token %}
+                    <label>
                 <textarea id="msg" class="input-text" name="content" placeholder="Écrivez votre message ici..."
                           required></textarea>
-                </label>
-                <button type="submit" class="send-button submit" title="Envoyer">
-                    <i class="bi bi-arrow-right-circle"></i>
-                </button>
-            </form>
+                    </label>
+                    <button type="submit" class="send-button submit" title="Envoyer">
+                        <i class="bi bi-arrow-right-circle"></i>
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 {% endblock %}

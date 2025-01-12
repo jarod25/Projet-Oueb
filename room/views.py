@@ -1,5 +1,6 @@
 from user.models import User
 from django.http import JsonResponse
+from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Room, Invitation, UserStatus, Message
@@ -8,15 +9,14 @@ from django.utils.timezone import now
 from datetime import timedelta
 from django.contrib import messages
 
-
 @login_required
 def room_list_view(request):
     user_id = request.session.get('user_id')
     user = User.objects.get(id=user_id)
-    
+
     # Filtrer les salons où l'utilisateur est membre
     user_rooms = Room.objects.filter(members=user)
-    
+
     return render(request, "room_list.html", {"rooms": user_rooms})
 
 
@@ -47,11 +47,13 @@ def create_room_view(request):
     # Afficher la page de création de salon pour les requêtes GET
     return render(request, "create_room.html")
 
+
 @login_required
 def delete_room_view(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     room.delete()
     return redirect("room_list")
+
 
 @login_required
 def room_detail_view(request, room_id):
@@ -107,6 +109,74 @@ def send_message_view(request, room_id):
     # Redirige vers la même page pour éviter tout problème de double affichage
     return redirect("room_detail", room_id=room.id)
 
+
+def new_messages_view(request, room_id):
+    last_id = int(request.GET.get('last_id', 0))
+    new_messages = Message.objects.filter(room_id=room_id, id__gt=last_id)
+
+    if new_messages.exists():
+        html_message = ""
+        for message in new_messages:
+            html_message += format_html(
+                """
+                <div class="message mb-3" data-message-id="{id}">
+                    <p class="mb-1">
+                        <strong>{author}</strong>
+                        {date}
+                    </p>
+                    <p class="message-content">
+                        {content}
+                    </p>
+                </div>
+                """,
+                id=message.id,
+                author=message.author.username,
+                date=format_message_date(message.sent_at),
+                content=message.content.replace("\n", "<br>"),
+            )
+        return JsonResponse({
+            'new_messages': True,
+            'html_message': html_message,
+            'last_id': new_messages.last().id,
+        })
+
+    # Aucun nouveau message après le délai
+    return JsonResponse({'new_messages': False})
+
+
+def format_message_date(sent_at):
+    from datetime import date, timedelta
+
+    today = date.today()
+    yesterday = today - timedelta(days=1)
+
+    if sent_at.date() == today:
+        return format_html('<span class="message-date text-muted">Aujourd\'hui à {}</span>', sent_at.strftime('%H:%M'))
+    elif sent_at.date() == yesterday:
+        return format_html('<span class="message-date text-muted">Hier à {}</span>', sent_at.strftime('%H:%M'))
+    else:
+        return format_html('<span class="message-date text-muted">Le {} à {}</span>', sent_at.strftime('%d/%m/%Y'),
+                           sent_at.strftime('%H:%M'))
+
+@login_required
+def get_messages(request, room_id):
+    room = get_object_or_404(Room, id=room_id)
+    if not room.members.filter(id=request.session.get('user_id')).exists():
+        return JsonResponse({"error": "Vous n'êtes pas membre de ce salon."}, status=401)
+    room_messages = room.messages.order_by("sent_at", "id").values()
+    return JsonResponse(list(room_messages), safe=False)
+
+@login_required
+def send_message(request, room_id):
+    user = User.objects.get(id=request.session.get('user_id'))
+    room = get_object_or_404(Room, id=room_id)
+    if not room.members.filter(id=user.id).exists():
+        return JsonResponse({"error": "Vous n'êtes pas membre de ce salon."}, status=401)
+    content = request.GET.get("content")
+    message = Message.objects.create(author=user, room=room, content=content)
+    return JsonResponse(message, safe=False)
+
+@login_required
 def search_users(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
     query = request.GET.get("q")

@@ -22,66 +22,6 @@ $(document).ready(function () {
         $('#receiver').val($(this).text());
         $('#suggestions-list').empty();
     });
-
-    // Load messages and handle message submission
-    let lastMessageId = null; // Track the ID of the last displayed message
-
-    function loadMessages(clearContainer = false) {
-        $.ajax({
-            url: window.location.href, // Use the current URL
-            data: { last_id: lastMessageId || 0 }, // Pass the last message ID (or 0 if null)
-            success: function (data) {
-                if (data.new_messages && data.new_messages.length > 0) {
-                    const messageContainer = $(".messages-container");
-
-                    // Clear the container if `clearContainer` is true (e.g., on page refresh)
-                    if (clearContainer) {
-                        messageContainer.empty();
-                    }
-
-                    // Append each new message to the container
-                    data.new_messages.forEach(function (message) {
-                        messageContainer.append(`
-                            <div class="message">
-                                <p>
-                                    <strong>${message.author}</strong>
-                                    ${message.timestamp}<br>
-                                    ${message.content}
-                                </p>
-                            </div>
-                        `);
-                        lastMessageId = message.id; // Update the last message ID
-                    });
-                }
-            },
-        });
-    }
-
-    // Handle message submission
-    $(document).on("submit", "#message", function (e) {
-        e.preventDefault();
-        $.ajax({
-            type: "POST",
-            url: $(this).attr("action"),
-            data: {
-                content: $("#msg").val(),
-                csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-            },
-            success: function () {
-                // Clear the input field after sending the message
-                $("#msg").val("");
-                loadMessages(false); // Fetch new messages immediately after sending
-            },
-        });
-    });
-
-    // Load messages on page load (clearContainer = true ensures no duplicates)
-    loadMessages(true);
-
-    // Fetch new messages every 2 seconds (clearContainer = false to append new ones only)
-    setInterval(function () {
-        loadMessages(false);
-    }, 2000);
 });
 
 $(document).ready(function () {
@@ -93,5 +33,55 @@ $(document).ready(function () {
 
     let messagesContainer = $('#input-container');
     messagesContainer.scrollTop(messagesContainer.prop("scrollHeight"));
+});
+
+$(document).ready(function () {
+    $('.send-button').on('click', function () {
+
+    });
+});
+
+$(document).on('click', '.send-button', function () {
+    const messagesContainer = $("#messages-container");
+    const roomId = messagesContainer.data("room-id");
+
+    function pollNewMessages() {
+        const lastMessageId = messagesContainer.data("last-id");
+
+        $.ajax({
+            url: `/room/${roomId}/new_messages/`,
+            method: "GET",
+            data: { last_id: lastMessageId },
+            success: function (data) {
+                if (data.new_messages) {
+                    let parsed_html = data.html_message.replace('&lt;br&gt;', '<br>');
+                    messagesContainer.append(parsed_html);
+                    messagesContainer.data("last-id", data.last_id);
+                }
+                // pollNewMessages();
+            },
+            error: function () {
+                setTimeout(pollNewMessages, 1000);
+            },
+        });
+    }
+
+    pollNewMessages();
+
+    $("#message").on("submit", function (e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: $(this).attr("action"),
+            method: "POST",
+            data: $(this).serialize(),
+            success: function () {
+                $("#msg").val("");
+            },
+            error: function (xhr, status, error) {
+                console.error("Erreur lors de l'envoi du message :", status, error);
+            },
+        });
+    });
 });
 

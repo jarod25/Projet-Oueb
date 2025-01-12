@@ -14,7 +14,7 @@
         <div class="chat-room-content border rounded">
             <div class="messages-container p-2" id="messages-container">
                 {% for message in room_messages %}
-                    <div class="message mb-3">
+                    <div class="message mb-3" data-message-id="{{ message.id }}">
                         <p class="mb-1">
                             <strong>{{ message.author.username }}</strong>
                             {% if message.sent_at|date:'d/m/Y' == today|date:'d/m/Y' %}
@@ -26,11 +26,9 @@
                             {% endif %}
                         </p>
                         <p class="message-content">
-                            {{ message.content|linebreaksbr }}
+                            {{ message.content|linebreaksbr|safe }}
                         </p>
                     </div>
-                {% empty %}
-                    <p>Aucun message dans ce salon pour le moment. Soyez le premier à écrire !</p>
                 {% endfor %}
             </div>
 

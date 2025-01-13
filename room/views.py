@@ -63,6 +63,8 @@ def room_detail_view(request, room_id):
         return redirect("room_list")
     room = get_object_or_404(Room, id=room_id)
     rooms = Room.objects.filter(members=user)
+    room_users = Room.objects.get(id=room_id).members.all()
+    owner = room.members.filter(userstatus__status="owner")
 
     room_messages = room.messages.order_by("sent_at", "id")
     return render(request, "room_details.html", {
@@ -70,7 +72,9 @@ def room_detail_view(request, room_id):
         "room_messages": room_messages,
         "rooms": rooms,
         "today": now(),
-        "yesterday": now().date() - timedelta(days=1)
+        "yesterday": now().date() - timedelta(days=1),
+        "room_users": room_users,
+        "owner": owner
     })
 
 

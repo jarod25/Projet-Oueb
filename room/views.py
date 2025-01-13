@@ -8,6 +8,7 @@ from django.utils.timezone import now
 from datetime import timedelta
 from django.contrib import messages
 from time import sleep
+from django.utils.safestring import mark_safe
 
 
 @login_required
@@ -94,25 +95,32 @@ last_message_times = {}
 
 @login_required
 def get_messages(request, room_id):
-    user = request.session.get('user_id')
+    user_id = request.session.get('user_id')
     room = get_object_or_404(Room, id=room_id)
 
-    if not room.members.filter(id=user).exists():
+    if not room.members.filter(id=user_id).exists():
         return JsonResponse({"error": "Unauthorized"}, status=403)
 
     room_messages = room.messages.order_by("sent_at", "id")
     html_message = ""
 
-    # Générer le HTML
+    # Generate the HTML
     for message in room_messages:
+        is_author = message.author.id == user_id
+        actions = (
+            mark_safe(
+                '<button type="button" title="Supprimer" id="delete-message"><i class="bi bi-trash-fill"></i></button>'
+                '<button type="button" title="Modifier" id="edit-message"><i class="bi bi-pencil-fill"></i></button>'
+            )
+            if is_author else ""
+        )
         html_message += format_html(
             """
             <div class="message-line mb-3" data-message-id="{id}">
                 <p class="mb-1">
                     <strong>{author}</strong>
                     {date}
-                    <button type="button" title="Supprimer" id="delete-message"><i class="bi bi-trash-fill"></i>
-                    </button>
+                    {actions}
                 </p>
                 <p class="message-content">
                     {content}
@@ -122,10 +130,12 @@ def get_messages(request, room_id):
             id=message.id,
             author=message.author.username,
             date=format_message_date(message.sent_at),
+            actions=actions,
             content=message.content.replace("\n", "<br>"),
         )
 
     return JsonResponse({'html_message': html_message})
+
 
 
 
@@ -215,6 +225,25 @@ def invitations_list_view(request):
 @login_required
 def delete_message(request, message_id):
     message = get_object_or_404(Message, id=message_id)
-    room_id = message.room.id  # Récupérer l'ID de la salle associée
+    if message.author.id != request.session.get('user_id'):
+        return JsonResponse({"error": "Unauthorized"}, status=403)
     message.delete()
-    return JsonResponse({"status": "ok", "room_id": room_id})
+    return JsonResponse({"status": "ok"})
+
+@login_required
+def edit_message(request, message_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid method."}, status=405)
+
+    message = get_object_or_404(Message, id=message_id)
+    if message.author.id != request.session.get('user_id'):
+        return JsonResponse({"error": "Unauthorized"}, status=403)
+
+    new_content = request.POST.get("content", "").strip()
+    if not new_content:
+        return JsonResponse({"error": "Message content cannot be empty."}, status=400)
+
+    message.content = new_content
+    message.save()
+
+    return JsonResponse({"content": message.content})

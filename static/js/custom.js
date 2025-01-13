@@ -40,38 +40,46 @@ $(document).ready(function () {
     const messagesContainer = $("#messages-container");
     const roomId = messagesContainer.data("room-id");
 
+    let isEditing = false; // Flag to track editing state
+
     function scrollToBottom() {
-        messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+        if (!isEditing) { // Scroll only if not editing
+            const messagesContainer = $("#messages-container");
+            messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+        }
     }
 
     function getMessages() {
+        if (isEditing) return; // Skip refresh if editing
+
+        const messagesContainer = $("#messages-container");
+        const roomId = messagesContainer.data("room-id");
+
         $.ajax({
             url: `/room/${roomId}/get_messages/`,
             method: 'GET',
             success: function (data) {
                 if (data.html_message) {
-                    const parsedHtml = $("<div>").html(data.html_message); // Parser le HTML récupéré
+                    const parsedHtml = $("<div>").html(data.html_message);
                     const newMessageIds = [];
                     parsedHtml.find(".message-line").each(function () {
                         newMessageIds.push($(this).data("message-id"));
                     });
 
-                    // Vérifier quels messages ne sont plus présents
                     messagesContainer.find(".message-line").each(function () {
                         const messageId = $(this).data("message-id");
                         if (!newMessageIds.includes(messageId)) {
-                            $(this).remove(); // Supprimer les messages absents
+                            $(this).remove();
                         }
                     });
 
-                    // Ajouter les nouveaux messages ou actualiser l'ordre
                     messagesContainer.html(parsedHtml.html());
                     scrollToBottom();
                 }
-                setTimeout(getMessages, 1000); // Répéter toutes les secondes
+                setTimeout(getMessages, 1000);
             },
             error: function (xhr, status, error) {
-                console.error('Erreur lors de la récupération des messages :', status, error);
+                console.error("Error fetching messages:", status, error);
                 setTimeout(getMessages, 1000);
             }
         });
@@ -136,6 +144,61 @@ $(document).ready(function () {
         }
     });
 
+    $(document).on("click", "#edit-message", function (e) {
+        e.preventDefault();
+        isEditing = true; // Set editing flag
+        const button = $(this);
+        const messageLine = button.closest(".message-line");
+        const messageId = messageLine.data("message-id");
+        const messageContent = messageLine.find(".message-content").text().trim();
+
+        // Save original content for restoration if canceled
+        messageLine.data("original-content", messageContent);
+
+        // Replace the message content with a textarea and buttons
+        messageLine.find(".message-content").html(`
+            <textarea class="edit-textarea form-control mb-2">${messageContent}</textarea>
+            <button class="save-edit-button btn btn-sm btn-primary">Enregistrer</button>
+            <button class="cancel-edit-button btn btn-sm btn-secondary">Annuler</button>
+        `);
+    });
+
+    $(document).on("click", ".cancel-edit-button", function (e) {
+        e.preventDefault();
+        isEditing = false; // Reset editing flag
+        const messageLine = $(this).closest(".message-line");
+        const originalContent = messageLine.data("original-content");
+
+        // Restore the original content
+        messageLine.find(".message-content").text(originalContent);
+    });
+
+    $(document).on("click", ".save-edit-button", function (e) {
+        e.preventDefault();
+        const button = $(this);
+        const messageLine = button.closest(".message-line");
+        const messageId = messageLine.data("message-id");
+        const newContent = messageLine.find(".edit-textarea").val();
+
+        $.ajax({
+            url: `/room/${messageId}/edit-message/`,
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
+                content: newContent,
+            },
+            success: function (response) {
+                isEditing = false; // Reset editing flag after save
+                messageLine.find(".message-content").text(response.content);
+            },
+            error: function () {
+                alert("Erreur lors de la modification du message.");
+            }
+        });
+        getMessages();
+    });
+
+    // Initialize message fetching
     getMessages();
     scrollToBottom();
 });

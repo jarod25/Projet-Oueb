@@ -16,7 +16,6 @@
                 {% for message in room_messages %}
                     <div class="mb-3 rounded message-line" id="message-line-{{ message.id }}" data-message-id="{{ message.id }}">
                         <p class="mb-1">
-                            {{ message.id }}
                             <strong>{{ message.author.username }}</strong>
                             {% if message.sent_at|date:'d/m/Y' == today|date:'d/m/Y' %}
                                 <span class="message-date text-muted">Aujourd'hui à {{ message.sent_at|date:'H:i' }}</span>
@@ -25,8 +24,10 @@
                             {% else %}
                                 <span class="message-date text-muted">Le {{ message.sent_at|date:'d/m/Y' }} à {{ message.sent_at|date:'H:i' }}</span>
                             {% endif %}
-                            <button type="button" title="Supprimer" id="delete-message"><i class="bi bi-trash-fill"></i>
-                            </button>
+                            {% if message.author.id == request.session.user_id %}
+                                <button type="button" title="Supprimer" id="delete-message"><i class="bi bi-trash-fill"></i></button>
+                                <button type="button" title="Modifier" id="edit-message"><i class="bi bi-pencil-fill"></i></button>
+                            {% endif %}
                         </p>
                         <p class="message-content">
                             {{ message.content|linebreaksbr|safe }}

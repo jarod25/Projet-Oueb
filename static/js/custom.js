@@ -38,6 +38,10 @@ $(document).ready(function () {
 
 // Script used to make an AJAX request to the server to get the messages of a room and display them in the chat.
 $(document).ready(function () {
+    function scrollToBottom() {
+        messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
+    }
+
     const messagesContainer = $("#messages-container");
     const roomId = messagesContainer.data("room-id");
 
@@ -46,12 +50,17 @@ $(document).ready(function () {
             url: `/room/${roomId}/get_messages/`,
             method: 'GET',
             success: function (data) {
-                messagesContainer.empty();
-                let parsed_html = data.html_message.replace('&lt;br&gt;', '<br>');
-                messagesContainer.append(parsed_html);
+                if (data.html_message) {
+                    messagesContainer.empty();
+                    let parsedHtml = data.html_message.replace('&lt;br&gt;', '<br>');
+                    messagesContainer.append(parsedHtml);
+                    scrollToBottom();
+                }
+                getMessages();
             },
             error: function (xhr, status, error) {
                 console.error('Erreur lors de la récupération des messages :', status, error);
+                setTimeout(getMessages, 1000);
             }
         });
     }
@@ -69,11 +78,11 @@ $(document).ready(function () {
             data: {content: message},
             success: function () {
                 $('#msg').val('');
+                scrollToBottom();
             },
         });
     }
 
-    // TODO: repair
     $('#msg').on('input', function () {
         const sendButton = $('.send-button');
         if ($(this).val().length > 0) {
@@ -83,13 +92,11 @@ $(document).ready(function () {
         }
     });
 
-    $('.send-button').on('click', async function (e) {
+    $('.send-button').on('click', function (e) {
         e.preventDefault();
-        try {
-            await sendMessage();
-            setTimeout(getMessages, 100);
-        } catch (error) {
-            console.error('Erreur dans la chaîne d\'exécution:', error);
-        }
+        sendMessage();
     });
+
+    getMessages();
+    scrollToBottom();
 });

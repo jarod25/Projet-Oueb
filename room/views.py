@@ -7,6 +7,7 @@ from user import login_required
 from django.utils.timezone import now
 from datetime import timedelta
 from django.contrib import messages
+from time import sleep
 
 
 @login_required
@@ -88,34 +89,51 @@ def format_message_date(sent_at):
                            sent_at.strftime('%H:%M'))
 
 
+last_message_times = {}
+
+
 @login_required
 def get_messages(request, room_id):
+    user = request.session.get('user_id')
     room = get_object_or_404(Room, id=room_id)
-    if not room.members.filter(id=request.session.get('user_id')).exists():
-        return JsonResponse({"error": "Vous n'êtes pas membre de ce salon."}, status=401)
-    room_messages = room.messages.order_by("sent_at", "id")
-    html_message = ""
-    for message in room_messages:
-        html_message += format_html(
-            """
-            <div class="message mb-3" data-message-id="{id}">
-                <p class="mb-1">
-                    <strong>{author}</strong>
-                    {date}
-                </p>
-                <p class="message-content">
-                    {content}
-                </p>
-            </div>
-            """,
-            id=message.id,
-            author=message.author.username,
-            date=format_message_date(message.sent_at),
-            content=message.content.replace("\n", "<br>"),
-        )
-    return JsonResponse({
-        'html_message': html_message,
-    })
+
+    if not room.members.filter(id=user).exists():
+        return JsonResponse({"error": "Unauthorized"}, status=403)
+
+    last_message_time = last_message_times.get(room_id, now())
+
+    timeout = 30
+    start_time = now()
+    while (now() - start_time).seconds < timeout:
+        latest_message = room.messages.order_by("-sent_at").first()
+        if latest_message and latest_message.sent_at > last_message_time:
+            last_message_times[room_id] = latest_message.sent_at
+
+            room_messages = room.messages.order_by("sent_at", "id")
+            html_message = ""
+            for message in room_messages:
+                html_message += format_html(
+                    """
+                    <div class="message mb-3" data-message-id="{id}">
+                        <p class="mb-1">
+                            <strong>{author}</strong>
+                            {date}
+                        </p>
+                        <p class="message-content">
+                            {content}
+                        </p>
+                    </div>
+                    """,
+                    id=message.id,
+                    author=message.author.username,
+                    date=format_message_date(message.sent_at),
+                    content=message.content.replace("\n", "<br>"),
+                )
+            return JsonResponse({'html_message': html_message})
+
+        sleep(1)
+
+    return JsonResponse({'html_message': None})
 
 
 @login_required
@@ -134,6 +152,7 @@ def send_message(request, room_id):
         return JsonResponse({"error": "Le contenu du message est vide."}, status=400)
 
     message = Message.objects.create(content=content, room=room, author=user)
+    last_message_times[room_id] = message.sent_at
     return JsonResponse(
         {"message": message.content, "author": user.username, "sent_at": message.sent_at.strftime("%d/%m/%Y %H:%M"),
          "room_id": room.id})

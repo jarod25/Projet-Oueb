@@ -67,7 +67,6 @@ def room_detail_view(request, room_id):
         return redirect("room_list")
     room = get_object_or_404(Room, id=room_id)
     rooms = Room.objects.filter(members=user)
-
     room_messages = room.messages.order_by("sent_at", "id")
     return render(request, "room_details.html", {
         "room": room,
@@ -118,14 +117,20 @@ def get_messages(request, room_id):
             for message in room_messages:
                 html_message += format_html(
                     """
-                    <div class="message mb-3" data-message-id="{id}">
+                    <div class="mb-3 rounded" id="message-line" data-message-id="{id}">
                         <p class="mb-1">
                             <strong>{author}</strong>
-                            {date}
+                            <span class="small fst-italic">
+                                {date}
+                            </span>
+                            <button type="button" title="Supprimer" id="delete-message" class="action-message px-1">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                            <button type="button" title="Modifier" id="edit-message" class="action-message px-1">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
                         </p>
-                        <p class="message-content">
-                            {content}
-                        </p>
+                        <p class="text-break">{content}</p>
                     </div>
                     """,
                     id=message.id,

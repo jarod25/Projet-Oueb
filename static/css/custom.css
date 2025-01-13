@@ -1,7 +1,8 @@
 @import url('https://fonts.googleapis.com/css?family=Montserrat:400,600,700');
 @import url('https://fonts.googleapis.com/css?family=Catamaran:400,800');
-@import url("https://fonts.googleapis.com/css?family=Nunito:400,700");
+@import url('https://fonts.googleapis.com/css?family=Nunito:400,700');
 
+/* Global styles */
 * {
     margin: 0;
     padding: 0;
@@ -9,19 +10,19 @@
 
 /* Color theme */
 :root {
-    --primary-color: #007bff;
-    --primary-color-hover: #0056b3;
-    --secondary-color: #6c757d;
-    --success-color: #28a745;
-    --info-color: #17a2b8;
-    --warning-color: #ffc107;
-    --danger-color: #dc3545;
-    --light-color: #f8f9fa;
-    --dark-color: #343a40;
-    --bg-chat-color: #eee;
+    --primary-color: #e27b7e; /* Rose doux */
+    --primary-color-hover: #d8646b; /* Rose foncé */
+    --secondary-color: #c97c83; /* Rose grisâtre */
+    --success-color: #ef9aa6; /* Rose pâle */
+    --info-color: #ffb3b8; /* Rose clair */
+    --warning-color: #f6d9db; /* Rose pêche */
+    --danger-color: #d8646b; /* Rouge rosé */
+    --light-color: #fce4e8; /* Rose pastel */
+    --dark-color: #803f47; /* Bordeaux */
+    --bg-chat-color: #f9e1e4; /* Fond rose pâle */
 }
 
-/* Custom CSS for the footer */
+/* Footer */
 .footer-custom {
     background-color: var(--light-color);
     color: var(--secondary-color);
@@ -31,12 +32,12 @@
     box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Custom CSS for the search bar */
+/* Search bar */
 #suggestions-list {
     list-style: none;
     padding: 0;
     margin: 0;
-    border: 1px solid #ccc;
+    border: 1px solid var(--secondary-color);
     max-height: 200px;
     overflow-y: auto;
 }
@@ -47,16 +48,16 @@
 }
 
 #suggestions-list li:hover {
-    background-color: #f0f0f0;
+    background-color: var(--bg-chat-color);
 }
 
-/* Custom CSS for form constraints */
+/* Form constraints */
 .errorlist li {
-    color: red;
-    list-style-type: None;
+    color: var(--danger-color);
+    list-style-type: none;
 }
 
-/* Custom CSS for the room list */
+/* Room list */
 .room-title {
     text-transform: uppercase;
     font-size: 1.5rem;
@@ -64,23 +65,22 @@
     align-items: center;
     justify-content: space-between;
     text-decoration: none;
-    color: #2b2f32;
-    padding-left: 1vh;
-    padding-right: 1vh;
+    color: var(--dark-color);
+    padding: 0 1vh;
 }
 
 a[class="btn btn-link room-title"]:hover {
-    color: #949da2;
+    color: var(--secondary-color);
 }
 
 .add-room {
     text-decoration: none;
-    color: #2b2f32;
+    color: var(--dark-color);
     font-size: 2rem;
 }
 
 .add-room:hover {
-    color: #949da2;
+    color: var(--secondary-color);
 }
 
 .list-unstyled {
@@ -100,12 +100,12 @@ a[class="btn btn-link room-title"]:hover {
 }
 
 .room-item:hover {
-    background-color: #e9ecef;
+    background-color: var(--bg-chat-color);
 }
 
 .room-link {
     text-decoration: none;
-    color: #212529;
+    color: var(--dark-color);
     flex-grow: 1;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -113,7 +113,7 @@ a[class="btn btn-link room-title"]:hover {
 }
 
 .delete-icon {
-    color: #dc3545;
+    color: var(--danger-color);
     transition: opacity 0.3s ease, color 0.3s ease;
     opacity: 0;
     pointer-events: none;
@@ -126,7 +126,7 @@ a[class="btn btn-link room-title"]:hover {
 }
 
 .delete-icon:hover {
-    color: #a71d2a;
+    color: var(--primary-color-hover);
 }
 
 @media (max-width: 768px) {
@@ -139,36 +139,9 @@ a[class="btn btn-link room-title"]:hover {
     }
 }
 
-
-/* Custom CSS for the room */
-.message-date {
-    font-style: italic;
-    font-size: 12px;
-    color: var(--secondary-color);
-}
-
-.chat-room {
-    display: flex;
-    flex-direction: column;
-    height: 85vh;
-}
-
-.chat-room-content {
-    display: flex;
-    flex-direction: column;
-    height: 79vh;
-}
-
-#message-content {
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    white-space: pre-wrap;
-}
-
+/* Messages container */
 #messages-container {
-    height: 71vh;
-    overflow-y: auto;
-    word-wrap: break-word;
+    scrollbar-width: thin;
 }
 
 #messages-container::-webkit-scrollbar {
@@ -177,154 +150,97 @@ a[class="btn btn-link room-title"]:hover {
 
 #messages-container::-webkit-scrollbar-thumb {
     background-color: var(--primary-color);
-    border-radius: 0.375rem;
+    border-radius: 4px;
 }
 
 #messages-container::-webkit-scrollbar-thumb:hover {
     background-color: var(--primary-color-hover);
 }
 
-#messages-container::-webkit-scrollbar-track {
-    background-color: var(--light-color);
+.vh-85 {
+    height: 85vh;
 }
 
-/* Zone de saisie */
-.input-container {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    background-color: var(--bg-chat-color);
+.flex-grow-1 {
+    flex-grow: 1;
 }
 
-.input-text {
-    border: none;
+.h-100 {
+    height: 100%;
+}
+
+.overflow-hidden {
+    overflow: hidden;
+}
+
+.overflow-auto {
+    overflow: auto;
+}
+
+#messages-container {
+    max-height: calc(100% - 3rem);
+}
+
+.text-gray-300 {
+    color: var(--secondary-color) !important;
+}
+
+.bg-light {
+    background-color: var(--light-color) !important;
+}
+
+textarea#msg {
     resize: none;
-    width: 95vh;
-    height: auto;
-    padding: 10px 10px 12px;
-    margin: 0 7px;
-    font-size: 1rem;
-    background-color: var(--bg-chat-color);
-}
-
-.input-text:focus {
-    outline: none;
-}
-
-.input-text::-webkit-scrollbar {
-    width: 8px;
-}
-
-.input-text::-webkit-scrollbar-thumb {
-    background-color: var(--primary-color);
-    border-radius: 0.375rem;
-}
-
-.input-text::-webkit-scrollbar-thumb:hover {
-    background-color: var(--primary-color-hover);
-}
-
-.input-text::-webkit-scrollbar-track {
     background-color: var(--light-color);
 }
 
-.send-button {
-    background-color: var(--bg-chat-color);
-    color: var(--primary-color);
+.emoji-btn,
+.send-btn {
+    background-color: transparent;
     border: none;
-    padding: 10px;
+    font-size: 2.5rem;
+    color: var(--secondary-color);
     cursor: pointer;
-    font-size: 2rem;
-    margin-left: -8px;
-    border-bottom-right-radius: 0.375rem;
 }
 
-.emoji-button {
-    background-color: var(--bg-chat-color);
+.emoji-btn:hover,
+.send-btn:hover {
     color: var(--primary-color);
+}
+
+.emoji-btn:focus,
+.send-btn:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.action-message {
+    visibility: hidden;
+    background-color: transparent;
     border: none;
-    padding: 13px 13px 15px;
-    cursor: pointer;
-    font-size: 2rem;
-    border-bottom-left-radius: 0.375rem;
-}
-
-.align-items-input {
-    display: flex;
-    align-items: center;
-}
-
-/* Responsive Ajustements */
-@media (max-width: 768px) {
-    #input-text {
-        font-size: 0.9rem;
-    }
-
-    #button-send {
-        width: 40px;
-        height: 40px;
-    }
-}
-
-.btn-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: var(--bg-chat-color);
     color: var(--primary-color);
-    font-size: 1.5rem;
-    text-decoration: none;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    position: relative;
+    float: right;
+    cursor: pointer;
+    font-size: 1.2em;
 }
 
-.btn-icon:hover {
-    background-color: var(--primary-color-hover);
-    color: var(--light-color);
+#message-line:hover {
+    background-color: var(--warning-color);
+    margin: 0 -1vh;
+    padding: 0 1vh;
+    padding-bottom: -0.1vh;
 }
 
-.btn-icon::after {
-    content: 'Inviter des utilisateurs';
-    position: absolute;
-    bottom: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #000;
-    color: #fff;
-    font-size: 0.75rem;
-    padding: 2px 8px;
-    border-radius: 4px;
-    opacity: 0;
-    white-space: nowrap;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
+#message-line:hover .action-message {
+    visibility: visible;
 }
 
-.btn-icon:hover::after {
-    opacity: 1;
+.action-message:hover {
+    color: red;
 }
 
-@media (max-width: 768px) {
-    .btn-icon {
-        width: 35px;
-        height: 35px;
-        font-size: 1.2rem;
-    }
 
-    .btn-icon::after {
-        font-size: 0.65rem;
-    }
-}
-
-.chat-icon {
-    font-size: 1.5rem;
-}
-
-/* Custom CSS for the 404 error page */
+/* 404 Error page */
 .error-container {
     text-align: center;
     font-size: 106px;
@@ -449,6 +365,7 @@ a[class="btn btn-link room-title"]:hover {
     background-color: #994a51;
 }
 
+/* 500 Error page */
 .container-500 {
     width: 75%;
     max-width: 700px;

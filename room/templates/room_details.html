@@ -1,53 +1,83 @@
 {% extends 'room_list.html' %}
 
 {% block chat %}
-    <div class="chat-room container">
+    <div class="container-fluid d-flex flex-column vh-85">
         <!-- Header du Salon -->
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="mb-0"><i class="bi bi-chat-left-text-fill chat-icon"></i> {{ room.name }}</h2>
-            <a href="{% url 'invite_user' room.id %}" class="btn-icon">
+            <h2 class="mb-0 d-flex align-items-center">
+                <i class="bi bi-chat-left-text-fill me-2"></i>{{ room.name }}
+            </h2>
+            <a href="{% url 'invite_user' room.id %}" class="btn btn-light rounded-5 p-2" data-bs-toggle="tooltip"
+               title="Inviter des utilisateurs">
                 <i class="bi bi-person-plus-fill"></i>
             </a>
         </div>
 
-        <!-- Conteneur des Messages -->
-        <div class="chat-room-content border rounded">
-            <div class="messages-container p-2" id="messages-container" data-room-id="{{ room.id }}">
-                {% for message in room_messages %}
-                    <div class="message mb-3" data-message-id="{{ message.id }}">
-                        <p class="mb-1">
-                            <strong>{{ message.author.username }}</strong>
-                            {% if message.sent_at|date:'d/m/Y' == today|date:'d/m/Y' %}
-                                <span class="message-date text-muted">Aujourd'hui à {{ message.sent_at|date:'H:i' }}</span>
-                            {% elif message.sent_at|date:'d/m/Y' == yesterday|date:'d/m/Y' %}
-                                <span class="message-date text-muted">Hier à {{ message.sent_at|date:'H:i' }}</span>
-                            {% else %}
-                                <span class="message-date text-muted">Le {{ message.sent_at|date:'d/m/Y' }} à {{ message.sent_at|date:'H:i' }}</span>
-                            {% endif %}
-                        </p>
-                        <p class="message-content">
-                            {{ message.content|linebreaksbr|safe }}
-                        </p>
-                    </div>
-                {% empty %}
-                    <p>Aucun message dans ce salon pour le moment. Soyez le premier à écrire !</p>
-                {% endfor %}
+        <!-- Corps principal : Messages et Liste des Utilisateurs -->
+        <div class="row flex-grow-1 overflow-hidden">
+            <!-- Colonne des Messages -->
+            <div class="col-10 d-flex flex-column h-100">
+                <!-- Conteneur des Messages -->
+                <div class="overflow-auto flex-grow-1 p-3" id="messages-container" data-room-id="{{ room.id }}">
+                    {% for message in room_messages %}
+                        <div class="mb-3 rounded" id="message-line" data-message-id="{{ message.id }}">
+                            <p class="mb-1">
+                                <strong>{{ message.author.username }}</strong>
+                                <span class="small fst-italic">
+                                    {% if message.sent_at|date:'d/m/Y' == today|date:'d/m/Y' %}
+                                        Aujourd'hui à {{ message.sent_at|date:'H:i' }}
+                                    {% elif message.sent_at|date:'d/m/Y' == yesterday|date:'d/m/Y' %}
+                                        Hier à {{ message.sent_at|date:'H:i' }}
+                                    {% else %}
+                                        Le {{ message.sent_at|date:'d/m/Y' }} à {{ message.sent_at|date:'H:i' }}
+                                    {% endif %}
+                                </span>
+                                <button type="button" title="Supprimer" id="delete-message" class="action-message px-1">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                                <button type="button" title="Modifier" id="edit-message" class="action-message px-1">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                            </p>
+                            <p class="text-break">{{ message.content|linebreaksbr|safe }}</p>
+                        </div>
+                    {% empty %}
+                        <p>Aucun message dans ce salon pour le moment. Soyez le premier à écrire !</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Zone d'Input -->
+                <div class="d-flex align-items-center p-2 bg-light rounded">
+                    <button class="btn emoji-btn p-0 me-2">
+                        <i class="bi bi-emoji-smile-fill"></i>
+                    </button>
+                    <form class="d-flex flex-grow-1" id="message" method="post">
+                        {% csrf_token %}
+                        <textarea id="msg" class="form-control bg-light border-0 shadow-none me-2" name="content"
+                                  placeholder="Écrivez votre message ici..." required></textarea>
+                        <button type="submit" class="btn send-btn p-0" title="Envoyer">
+                            <i class="bi bi-arrow-right-circle"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
 
-            <!-- Zone d'Input -->
-            <div class="align-items-input">
-                <button class="emoji-button" title="Ajouter un emoji">
-                    <i class="bi bi-emoji-smile-fill"></i>
-                </button>
-                <form class="input-container" id="message" method="post">
-                    {% csrf_token %}
-                    <label for="msg"></label>
-                    <textarea id="msg" class="input-text" name="content" placeholder="Écrivez votre message ici..."
-                              required></textarea>
-                    <button type="submit" class="send-button submit" title="Envoyer">
-                        <i class="bi bi-arrow-right-circle"></i>
-                    </button>
-                </form>
+            <!-- Colonne des Utilisateurs -->
+            <div class="col-2 d-flex flex-column h-100 border-start">
+                <h5 class="p-2 border-bottom">Utilisateurs</h5>
+                <div class="overflow-auto flex-grow-1 p-2">
+                    {% for user_status in room_users %}
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-person-circle me-2"></i>
+                            <span class="flex-grow-1">{{ user_status.user.username }}</span>
+                            {% if user_status.status == "owner" %}
+                                <i class="bi bi-award-fill text-warning ms-2" title="Propriétaire"></i>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <p>Aucun utilisateur.</p>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>

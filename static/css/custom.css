@@ -161,6 +161,26 @@ a[class="btn btn-link room-title"]:hover {
     height: 85vh;
 }
 
+.flex-grow-1 {
+    flex-grow: 1;
+}
+
+.h-100 {
+    height: 100%;
+}
+
+.overflow-hidden {
+    overflow: hidden;
+}
+
+.overflow-auto {
+    overflow: auto;
+}
+
+#messages-container {
+    max-height: calc(100% - 3rem);
+}
+
 .text-gray-300 {
     color: var(--secondary-color) !important;
 }

@@ -31,19 +31,16 @@ $(document).ready(function () {
         this.style.height = (this.scrollHeight) + 'px';
         this.style.zIndex = '0';
     });
-
-    let messagesContainer = $('#input-container');
-    messagesContainer.scrollTop(messagesContainer.prop("scrollHeight"));
 });
 
 // Script used to make an AJAX request to the server to get the messages of a room and display them in the chat.
 $(document).ready(function () {
+    const messagesContainer = $("#messages-container");
+    const roomId = messagesContainer.data("room-id");
+
     function scrollToBottom() {
         messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
     }
-
-    const messagesContainer = $("#messages-container");
-    const roomId = messagesContainer.data("room-id");
 
     if (roomId) {
         function getMessages() {
@@ -85,7 +82,7 @@ $(document).ready(function () {
         }
 
         $('#msg').on('input', function () {
-            const sendButton = $('.send-button');
+            const sendButton = $('.send-btn');
             if ($(this).val().length > 0) {
                 sendButton.removeAttr('disabled');
             } else {
@@ -93,7 +90,7 @@ $(document).ready(function () {
             }
         });
 
-        $('.send-button').on('click', function (e) {
+        $('.send-btn').on('click', function (e) {
             e.preventDefault();
             sendMessage();
         });

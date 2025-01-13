@@ -12,7 +12,7 @@
 
         <!-- Conteneur des Messages -->
         <div class="chat-room-content border rounded">
-            <div class="messages-container p-2" id="messages-container">
+            <div class="messages-container p-2" id="messages-container" data-room-id="{{ room.id }}">
                 {% for message in room_messages %}
                     <div class="message mb-3" data-message-id="{{ message.id }}">
                         <p class="mb-1">
@@ -33,15 +33,14 @@
             </div>
 
             <!-- Zone d'Input -->
-            <form class="input-container" id="message" method="post" action="{% url 'send_message' room.id %}">
+            <form class="input-container" id="message" method="post">
                 {% csrf_token %}
                 <button class="emoji-button" title="Ajouter un emoji">
                     <i class="bi bi-emoji-smile-fill"></i>
                 </button>
-                <label>
+                <label for="msg"></label>
                 <textarea id="msg" class="input-text" name="content" placeholder="Écrivez votre message ici..."
                           required></textarea>
-                </label>
                 <button type="submit" class="send-button submit" title="Envoyer">
                     <i class="bi bi-arrow-right-circle"></i>
                 </button>

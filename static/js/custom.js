@@ -24,6 +24,7 @@ $(document).ready(function () {
     });
 });
 
+// Script used to make the textarea grow as the user types in it.
 $(document).ready(function () {
     $('#input-text').on('input', function () {
         this.style.height = 'auto';
@@ -35,53 +36,60 @@ $(document).ready(function () {
     messagesContainer.scrollTop(messagesContainer.prop("scrollHeight"));
 });
 
+// Script used to make an AJAX request to the server to get the messages of a room and display them in the chat.
 $(document).ready(function () {
-    $('.send-button').on('click', function () {
-
-    });
-});
-
-$(document).on('click', '.send-button', function () {
     const messagesContainer = $("#messages-container");
     const roomId = messagesContainer.data("room-id");
 
-    function pollNewMessages() {
-        const lastMessageId = messagesContainer.data("last-id");
-
+    function getMessages() {
         $.ajax({
-            url: `/room/${roomId}/new_messages/`,
-            method: "GET",
-            data: { last_id: lastMessageId },
+            url: `/room/${roomId}/get_messages/`,
+            method: 'GET',
             success: function (data) {
-                if (data.new_messages) {
-                    let parsed_html = data.html_message.replace('&lt;br&gt;', '<br>');
-                    messagesContainer.append(parsed_html);
-                    messagesContainer.data("last-id", data.last_id);
-                }
-                // pollNewMessages();
+                messagesContainer.empty();
+                let parsed_html = data.html_message.replace('&lt;br&gt;', '<br>');
+                messagesContainer.append(parsed_html);
             },
-            error: function () {
-                setTimeout(pollNewMessages, 1000);
+            error: function (xhr, status, error) {
+                console.error('Erreur lors de la récupération des messages :', status, error);
+            }
+        });
+    }
+
+    function getCSRFToken() {
+        return $('input[name="csrfmiddlewaretoken"]').val();
+    }
+
+    function sendMessage() {
+        const message = $('#msg').val();
+        $.ajax({
+            url: `/room/${roomId}/send_message/`,
+            method: 'POST',
+            headers: {'X-CSRFToken': getCSRFToken()},
+            data: {content: message},
+            success: function () {
+                $('#msg').val('');
             },
         });
     }
 
-    pollNewMessages();
+    // TODO: repair
+    $('#msg').on('input', function () {
+        const sendButton = $('.send-button');
+        if ($(this).val().length > 0) {
+            sendButton.removeAttr('disabled');
+        } else {
+            sendButton.attr('disabled', 'disabled');
+        }
+    });
 
-    $("#message").on("submit", function (e) {
+    $('.send-button').on('click', async function (e) {
         e.preventDefault();
-
-        $.ajax({
-            url: $(this).attr("action"),
-            method: "POST",
-            data: $(this).serialize(),
-            success: function () {
-                $("#msg").val("");
-            },
-            error: function (xhr, status, error) {
-                console.error("Erreur lors de l'envoi du message :", status, error);
-            },
-        });
+        try {
+            await sendMessage();
+            setTimeout(getMessages, 100);
+        } catch (error) {
+            console.error('Erreur dans la chaîne d\'exécution:', error);
+        }
     });
 });
-

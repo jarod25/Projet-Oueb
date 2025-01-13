@@ -36,14 +36,13 @@ $(document).ready(function () {
     messagesContainer.scrollTop(messagesContainer.prop("scrollHeight"));
 });
 
-// Script used to make an AJAX request to the server to get the messages of a room and display them in the chat.
 $(document).ready(function () {
+    const messagesContainer = $("#messages-container");
+    const roomId = messagesContainer.data("room-id");
+
     function scrollToBottom() {
         messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
     }
-
-    const messagesContainer = $("#messages-container");
-    const roomId = messagesContainer.data("room-id");
 
     function getMessages() {
         $.ajax({
@@ -51,12 +50,25 @@ $(document).ready(function () {
             method: 'GET',
             success: function (data) {
                 if (data.html_message) {
-                    messagesContainer.empty();
-                    let parsedHtml = data.html_message.replace('&lt;br&gt;', '<br>');
-                    messagesContainer.append(parsedHtml);
+                    const parsedHtml = $("<div>").html(data.html_message); // Parser le HTML récupéré
+                    const newMessageIds = [];
+                    parsedHtml.find(".message-line").each(function () {
+                        newMessageIds.push($(this).data("message-id"));
+                    });
+
+                    // Vérifier quels messages ne sont plus présents
+                    messagesContainer.find(".message-line").each(function () {
+                        const messageId = $(this).data("message-id");
+                        if (!newMessageIds.includes(messageId)) {
+                            $(this).remove(); // Supprimer les messages absents
+                        }
+                    });
+
+                    // Ajouter les nouveaux messages ou actualiser l'ordre
+                    messagesContainer.html(parsedHtml.html());
                     scrollToBottom();
                 }
-                getMessages();
+                setTimeout(getMessages, 1000); // Répéter toutes les secondes
             },
             error: function (xhr, status, error) {
                 console.error('Erreur lors de la récupération des messages :', status, error);
@@ -97,34 +109,33 @@ $(document).ready(function () {
         sendMessage();
     });
 
+    $(document).on("click", "#delete-message", function (e) {
+        e.preventDefault();
+        const button = $(this);
+        const messageLine = button.closest(".message-line");
+        const messageId = messageLine.data("message-id");
+
+        if (messageId) {
+            $.ajax({
+                url: `/room/${messageId}/delete-message/`,
+                type: "POST",
+                data: {
+                    csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
+                },
+                success: function () {
+                messageLine.remove();
+                messageLine.remove();
+
+                    messageLine.remove();
+
+                },
+                error: function () {
+                    alert("Une erreur s'est produite lors de la suppression du message.");
+                },
+            });
+        }
+    });
+
     getMessages();
     scrollToBottom();
 });
-
-$(document).on("click", "#delete-message", function (e) {
-    e.preventDefault();
-    const button = $(this);
-    const messageLine = button.closest(".message-line");
-    const messageId = messageLine.data("message-id");
-
-    if (messageId) {
-        $.ajax({
-            url: `/room/${messageId}/delete-message/`,
-            type: "POST",
-            data: {
-                csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-            },
-            success: function () {
-                // Supprimer le message du DOM après suppression
-                messageLine.remove();
-
-            },
-            error: function () {
-                alert("Une erreur s'est produite lors de la suppression du message.");
-            },
-        });
-    }
-    getMessages()
-    
-});
-

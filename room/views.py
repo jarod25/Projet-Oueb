@@ -100,40 +100,33 @@ def get_messages(request, room_id):
     if not room.members.filter(id=user).exists():
         return JsonResponse({"error": "Unauthorized"}, status=403)
 
-    last_message_time = last_message_times.get(room_id, now())
+    room_messages = room.messages.order_by("sent_at", "id")
+    html_message = ""
 
-    timeout = 30
-    start_time = now()
-    while (now() - start_time).seconds < timeout:
-        latest_message = room.messages.order_by("-sent_at").first()
-        if latest_message and latest_message.sent_at > last_message_time:
-            last_message_times[room_id] = latest_message.sent_at
+    # Générer le HTML
+    for message in room_messages:
+        html_message += format_html(
+            """
+            <div class="message-line mb-3" data-message-id="{id}">
+                <p class="mb-1">
+                    <strong>{author}</strong>
+                    {date}
+                    <button type="button" title="Supprimer" id="delete-message"><i class="bi bi-trash-fill"></i>
+                    </button>
+                </p>
+                <p class="message-content">
+                    {content}
+                </p>
+            </div>
+            """,
+            id=message.id,
+            author=message.author.username,
+            date=format_message_date(message.sent_at),
+            content=message.content.replace("\n", "<br>"),
+        )
 
-            room_messages = room.messages.order_by("sent_at", "id")
-            html_message = ""
-            for message in room_messages:
-                html_message += format_html(
-                    """
-                    <div class="message mb-3" data-message-id="{id}">
-                        <p class="mb-1">
-                            <strong>{author}</strong>
-                            {date}
-                        </p>
-                        <p class="message-content">
-                            {content}
-                        </p>
-                    </div>
-                    """,
-                    id=message.id,
-                    author=message.author.username,
-                    date=format_message_date(message.sent_at),
-                    content=message.content.replace("\n", "<br>"),
-                )
-            return JsonResponse({'html_message': html_message})
+    return JsonResponse({'html_message': html_message})
 
-        sleep(1)
-
-    return JsonResponse({'html_message': None})
 
 
 @login_required
@@ -221,6 +214,7 @@ def invitations_list_view(request):
 
 @login_required
 def delete_message(request, message_id):
-    message = Message.objects.get(id=message_id)
+    message = get_object_or_404(Message, id=message_id)
+    room_id = message.room.id  # Récupérer l'ID de la salle associée
     message.delete()
-    return JsonResponse({"status": "ok"})
+    return JsonResponse({"status": "ok", "room_id": room_id})

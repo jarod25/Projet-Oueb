@@ -14,7 +14,7 @@
         <div class="chat-room-content border rounded">
             <div class="messages-container p-2" id="messages-container" data-room-id="{{ room.id }}">
                 {% for message in room_messages %}
-                <div class="mb-3 rounded message-line" id="message-line-{{ message.id }}" data-message-id="{{ message.id }}">
+                    <div class="mb-3 rounded message-line" id="message-line-{{ message.id }}" data-message-id="{{ message.id }}">
                         <p class="mb-1">
                             {{ message.id }}
                             <strong>{{ message.author.username }}</strong>

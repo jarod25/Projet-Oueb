@@ -1,5 +1,5 @@
 from user.models import User
-from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.utils.html import format_html
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Room, Invitation, UserStatus, Message
@@ -220,7 +220,7 @@ def invitations_list_view(request):
     return render(request, "invitations_list.html", {"invitations": invitations})
 
 @login_required
-def delete_message(request, pk):
-    message = Message.objects.get(id=pk)
+def delete_message(request, message_id):
+    message = Message.objects.get(id=message_id)
     message.delete()
-    return HttpResponseRedirect(request.META.get('HTTP_RFERER'))
+    return JsonResponse({"status": "ok"})

@@ -101,26 +101,27 @@ $(document).ready(function () {
     scrollToBottom();
 });
 
-$(document).on("click", ".delete-message", function (e) {
+$(document).on("click", "#delete-message", function (e) {
     e.preventDefault();
     const button = $(this);
-    const deleteUrl = button.data("delete-url");
-    console.log(deleteUrl)
+    const messageLine = $("#message-line");
+    let message_id = messageLine.data("message-id");
+    console.log(message_id);
 
-    if (confirm("Voulez-vous vraiment supprimer ce message ?")) {
-        $.ajax({
-            url: deleteUrl,
-            type: "POST",
-            data: {
-                csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
-            },
-            success: function () {
-                // Supprimer le message du DOM après suppression
-                button.closest(".message").remove();
-            },
-            error: function () {
-                alert("Une erreur s'est produite lors de la suppression du message.");
-            },
-        });
-    }
+    // if (message_id) {
+    //     $.ajax({
+    //         url: `/room/${message_id}/delete-message`,
+    //         type: "POST",
+    //         data: {
+    //             csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val(),
+    //         },
+    //         success: function () {
+    //             // Supprimer le message du DOM après suppression
+    //             button.closest("#message-line").remove();
+    //         },
+    //         error: function () {
+    //             alert("Une erreur s'est produite lors de la suppression du message.");
+    //         },
+    //     });
+    // }
 });

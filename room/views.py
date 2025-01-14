@@ -1,14 +1,12 @@
 from user.models import User
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse
 from django.utils.html import format_html
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Room, Invitation, UserStatus, Message
 from user import login_required
 from django.utils.timezone import now
-from datetime import timedelta
+from datetime import date, timedelta
 from django.contrib import messages
-from time import sleep
-from django.utils.safestring import mark_safe
 
 
 @login_required
@@ -64,7 +62,6 @@ def room_detail_view(request, room_id):
         return redirect("room_list")
     room = get_object_or_404(Room, id=room_id)
     rooms = Room.objects.filter(members=user)
-
     room_messages = room.messages.order_by("sent_at", "id")
     return render(request, "room_details.html", {
         "room": room,
@@ -76,8 +73,6 @@ def room_detail_view(request, room_id):
 
 
 def format_message_date(sent_at):
-    from datetime import date, timedelta
-
     today = date.today()
     yesterday = today - timedelta(days=1)
 
@@ -101,40 +96,42 @@ def get_messages(request, room_id):
     if not room.members.filter(id=user_id).exists():
         return JsonResponse({"error": "Unauthorized"}, status=403)
 
-    room_messages = room.messages.order_by("sent_at", "id")
-    html_message = ""
+    last_message_time = last_message_times.get(room_id, now())
 
-    # Generate the HTML
-    for message in room_messages:
-        is_author = message.author.id == user_id
-        actions = (
-            mark_safe(
-                '<button type="button" title="Supprimer" id="delete-message"><i class="bi bi-trash-fill"></i></button>'
-                '<button type="button" title="Modifier" id="edit-message"><i class="bi bi-pencil-fill"></i></button>'
-            )
-            if is_author else ""
-        )
-        html_message += format_html(
-            """
-            <div class="message-line mb-3" data-message-id="{id}">
-                <p class="mb-1">
-                    <strong>{author}</strong>
-                    {date}
-                    {actions}
-                </p>
-                <p class="message-content">
-                    {content}
-                </p>
-            </div>
-            """,
-            id=message.id,
-            author=message.author.username,
-            date=format_message_date(message.sent_at),
-            actions=actions,
-            content=message.content.replace("\n", "<br>"),
-        )
+    timeout = 30
+    start_time = now()
+    while (now() - start_time).seconds < timeout:
+        latest_message = room.messages.order_by("-sent_at").first()
+        if latest_message and latest_message.sent_at > last_message_time:
+            last_message_times[room_id] = latest_message.sent_at
 
-    return JsonResponse({'html_message': html_message})
+            room_messages = room.messages.order_by("sent_at", "id")
+            html_message = ""
+            for message in room_messages:
+                html_message += format_html(
+                    """
+                    <div class="mb-3 rounded" id="message-line" data-message-id="{id}">
+                        <p class="mb-1">
+                            <strong>{author}</strong>
+                            <span class="small fst-italic">
+                                {date}
+                            </span>
+                            <button type="button" title="Supprimer" id="delete-message" class="action-message px-1">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                            <button type="button" title="Modifier" id="edit-message" class="action-message px-1">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                        </p>
+                        <p class="text-break">{content}</p>
+                    </div>
+                    """,
+                    id=message.id,
+                    author=message.author.username,
+                    date=format_message_date(message.sent_at),
+                    content=message.content.replace("\n", "<br>"),
+                )
+            return JsonResponse({'html_message': html_message})
 
 
 
@@ -164,10 +161,12 @@ def send_message(request, room_id):
 @login_required
 def search_users(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
-    query = request.GET.get("q")
-    users = User.objects.exclude(id=user.id).filter(username__icontains=query)
-    results = [user.username for user in users]
-    return JsonResponse(results, safe=False)
+    query = request.GET.get('q', '')
+    if query:
+        users = User.objects.exclude(id=user.id).filter(username__icontains=query)
+        matching_users = [{'id': user.id, 'username': user.username} for user in users]
+        return JsonResponse(matching_users, safe=False)
+    return JsonResponse({"error": "Error while searching users"}, safe=False)
 
 
 @login_required
@@ -176,23 +175,26 @@ def invite_user_view(request, room_id):
     room = get_object_or_404(Room, id=room_id)
 
     if request.method == "GET":
-        users = User.objects.exclude(id=request.session.get('user_id'))
+        invited_users = Invitation.objects.filter(room=room, status__in=['pending', 'accepted']).values_list('receiver',
+                                                                                                             flat=True)
+        users = User.objects.exclude(id=user.id).exclude(id__in=invited_users)
         return render(request, "invite_user.html", {"room": room, "users": users})
 
     if request.method == "POST":
-        receiver_username = request.POST.get("receiver_username")
+        receiver_id = request.POST.get("receiver_id")
 
-        receiver = get_object_or_404(User, username=receiver_username)
+        if receiver_id:
+            receiver = get_object_or_404(User, id=receiver_id)
+        else:
+            return JsonResponse({"error": "Le destinataire n'est pas spécifié."}, status=400)
 
         if Invitation.objects.filter(sender=user, receiver=receiver, room=room, status="pending").exists():
-            return render(request, "invite_user.html", {
-                "room": room,
-                "users": User.objects.exclude(id=request.session.get('user_id')),
-                "error": "Invitation déjà envoyée!"
-            })
+            return JsonResponse({"error": "Invitation déjà envoyée !"}, status=400)
 
         Invitation.objects.create(sender=user, receiver=receiver, room=room)
-        return redirect("room_detail", room_id=room.id)
+        return JsonResponse({"message": "Invitation envoyée avec succès."}, status=201)
+
+    return JsonResponse({"error": "Méthode non autorisée."}, status=405)
 
 
 @login_required

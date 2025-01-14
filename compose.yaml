@@ -1,0 +1,21 @@
+services:
+  projet-oueb:
+    image: jarod25/projet-oueb
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./db.sqlite3
+        target: /app/db.sqlite3
+      - ./static:/app/static
+    environment:
+      DJANGO_CSRF_TRUSTED_ORIGINS: 'http://localhost:8000'
+
+  projet-oueb-proxy:
+    image: nginx:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./static:/static:ro
+    depends_on:
+      - projet-oueb

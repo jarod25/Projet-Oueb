@@ -7,5 +7,6 @@ COPY . /app
 RUN pip3 install -r requirements.txt --no-cache-dir
 
 #COPY --from=gloursdocker/docker / /
+RUN chmod +x /app/entrypoint.sh
 ENV DEBUG=False
 CMD ["/app/entrypoint.sh"]

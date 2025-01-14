@@ -1,6 +1,7 @@
 services:
   projet-oueb:
     image: jarod25/projet-oueb
+    build: .
     restart: unless-stopped
     volumes:
       - type: bind

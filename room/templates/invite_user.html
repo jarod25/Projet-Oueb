@@ -1,16 +1,23 @@
-{% extends "base.html" %}
-
-{% block content %}
-    <h1>Inviter l'utilisateur à {{ room.name }}</h1>
+<div class="container-fluid">
+    <h1 class="h5 mb-4">Inviter l'utilisateur au salon : {{ room.name }}</h1>
     {% if error %}
-        <p style="color: red;">{{ error }}</p>
+        <div class="alert alert-danger" role="alert">{{ error }}</div>
     {% endif %}
-    <form method="post">
+    <form method="post" data-room-id="{{ room.id }}" class="needs-validation" novalidate>
         {% csrf_token %}
-        <label for="receiver">Selectionnez un utilisateur à ajouter</label>
-        <input type="text" id="receiver" name="receiver_username" placeholder="Commencez à taper un nom d'utilisateur">
-        <ul id="suggestions-list"></ul>
-        <button type="submit">Envoyer une invitation</button>
+        <div class="mb-3">
+            <p id="infos"></p>
+            <label for="receiver" class="form-label">Sélectionnez un utilisateur à ajouter</label>
+            <input
+                    type="text"
+                    id="receiver"
+                    name="receiver_username"
+                    class="form-control"
+                    placeholder="Commencez à taper un nom d'utilisateur"
+                    autocomplete="off"
+                    required
+            >
+        </div>
+        <ul id="suggestions-list" class="list-group mb-3"></ul>
     </form>
-    <a href="{% url 'room_list' %}">Retour à la liste des salons</a>
-{% endblock %}
+</div>

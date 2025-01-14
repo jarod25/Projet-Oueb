@@ -7,10 +7,27 @@
             <h2 class="mb-0 d-flex align-items-center">
                 <i class="bi bi-chat-left-text-fill me-2"></i>{{ room.name }}
             </h2>
-            <a href="{% url 'invite_user' room.id %}" class="btn btn-light rounded-5 p-2" data-bs-toggle="tooltip"
+            <a href="{% url 'invite_user' room.id %}"
+               class="btn btn-light rounded-5 p-2 invite-user-btn"
+               data-bs-toggle="tooltip"
                title="Inviter des utilisateurs">
                 <i class="bi bi-person-plus-fill"></i>
             </a>
+
+            <!-- Modal -->
+            <div class="modal fade" id="inviteUserModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Inviter des utilisateurs</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            {% include 'invite_user.html' %}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Corps principal : Messages et Liste des Utilisateurs -->

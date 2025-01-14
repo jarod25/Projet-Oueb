@@ -9,3 +9,6 @@ class User(models.Model):
 
     def __str__(self):
         return self.username
+
+    def lower(self):
+        return self.username.lower()

@@ -1,16 +1,32 @@
 // This script is used to make an AJAX request to the server to get a list of usernames that match the query entered by the user in the receiver field.
 $(document).ready(function () {
-    $('#receiver').on('input', function () {
+    $(document).on('input', '#receiver', function () {
         let query = $(this).val();
+        let roomId = $(this).closest('form').data('room-id');
+        let infos = $('#infos');
         if (query.length > 1) {
             $.ajax({
-                url: 'search_users',
+                url: `/room/${roomId}/invite/search_users`,
                 data: {'q': query},
                 success: function (data) {
-                    $('#suggestions-list').empty();
-                    data.forEach(function (username) {
-                        $('#suggestions-list').append('<li>' + username + '</li>');
-                    });
+                    let suggestionsList = $('#suggestions-list');
+                    suggestionsList.empty();
+                    if (data.length > 0) {
+                        data.forEach(function (user) {
+                            suggestionsList.append(`
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    ${user.username}
+                                    <button class="btn btn-primary btn-sm invite-btn" data-user-id="${user.id}">Inviter</button>
+                                </li>
+                            `);
+                        });
+                    } else {
+                        suggestionsList.append('<li class="list-group-item text-muted">Aucun utilisateur trouvé</li>');
+                    }
+                },
+                error: function () {
+                    infos.text('Erreur lors de la recherche des utilisateurs.');
+                    infos.removeClass('text-success').addClass('text-danger');
                 }
             });
         } else {
@@ -18,8 +34,33 @@ $(document).ready(function () {
         }
     });
 
-    $(document).on('click', '#suggestions-list li', function () {
-        $('#receiver').val($(this).text());
+    $(document).on('click', '.invite-btn', function (e) {
+        e.preventDefault();
+        let userId = $(this).data('user-id');
+        let roomId = $(this).closest('form').data('room-id');
+        let infos = $('#infos');
+
+        $.ajax({
+            url: `/room/${roomId}/invite/`,
+            method: 'POST',
+            headers: {'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()},
+            data: {
+                'receiver_id': userId
+            },
+            success: function (response) {
+                infos.text(response.message);
+                infos.removeClass('text-danger').addClass('text-success');
+            },
+            error: function (xhr) {
+                let errorMsg = xhr.responseJSON?.error || 'Erreur lors de l\'invitation.';
+                infos.text(errorMsg);
+                infos.removeClass('text-success').addClass('text-danger');
+            }
+        });
+    });
+
+    $(document).on('click', '.btn-close', function () {
+        $('#receiver').val('');
         $('#suggestions-list').empty();
     });
 });
@@ -37,6 +78,7 @@ $(document).ready(function () {
 $(document).ready(function () {
     const messagesContainer = $("#messages-container");
     const roomId = messagesContainer.data("room-id");
+    const nav_timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     function scrollToBottom() {
         messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
@@ -100,4 +142,17 @@ $(document).ready(function () {
 
 
     }
+});
+
+$(document).ready(function () {
+    $('.invite-user-btn').on('click', function (e) {
+        e.preventDefault();
+        const url = $(this).attr('href');
+        $.get(url, function (data) {
+            $('#inviteUserModal .modal-body').html(data);
+            $('#inviteUserModal').modal('show'); // Affiche la modal
+        }).fail(function () {
+            alert('Erreur lors du chargement. Veuillez réessayer.');
+        });
+    });
 });

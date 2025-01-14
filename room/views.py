@@ -1,3 +1,5 @@
+from dateutil.utils import today
+
 from user.models import User
 from django.http import JsonResponse
 from django.utils.html import format_html
@@ -5,7 +7,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Room, Invitation, UserStatus, Message
 from user import login_required
 from django.utils.timezone import now
-from datetime import timedelta
+from datetime import date, timedelta
 from django.contrib import messages
 from time import sleep
 
@@ -78,8 +80,6 @@ def room_detail_view(request, room_id):
 
 
 def format_message_date(sent_at):
-    from datetime import date, timedelta
-
     today = date.today()
     yesterday = today - timedelta(days=1)
 
@@ -170,10 +170,12 @@ def send_message(request, room_id):
 @login_required
 def search_users(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
-    query = request.GET.get("q")
-    users = User.objects.exclude(id=user.id).filter(username__icontains=query)
-    results = [user.username for user in users]
-    return JsonResponse(results, safe=False)
+    query = request.GET.get('q', '')
+    if query:
+        users = User.objects.exclude(id=user.id).filter(username__icontains=query)
+        matching_users = [{'id': user.id, 'username': user.username} for user in users]
+        return JsonResponse(matching_users, safe=False)
+    return JsonResponse({"error": "Error while searching users"}, safe=False)
 
 
 @login_required
@@ -182,23 +184,26 @@ def invite_user_view(request, room_id):
     room = get_object_or_404(Room, id=room_id)
 
     if request.method == "GET":
-        users = User.objects.exclude(id=request.session.get('user_id'))
+        invited_users = Invitation.objects.filter(room=room, status__in=['pending', 'accepted']).values_list('receiver',
+                                                                                                             flat=True)
+        users = User.objects.exclude(id=user.id).exclude(id__in=invited_users)
         return render(request, "invite_user.html", {"room": room, "users": users})
 
     if request.method == "POST":
-        receiver_username = request.POST.get("receiver_username")
+        receiver_id = request.POST.get("receiver_id")
 
-        receiver = get_object_or_404(User, username=receiver_username)
+        if receiver_id:
+            receiver = get_object_or_404(User, id=receiver_id)
+        else:
+            return JsonResponse({"error": "Le destinataire n'est pas spécifié."}, status=400)
 
         if Invitation.objects.filter(sender=user, receiver=receiver, room=room, status="pending").exists():
-            return render(request, "invite_user.html", {
-                "room": room,
-                "users": User.objects.exclude(id=request.session.get('user_id')),
-                "error": "Invitation déjà envoyée!"
-            })
+            return JsonResponse({"error": "Invitation déjà envoyée !"}, status=400)
 
         Invitation.objects.create(sender=user, receiver=receiver, room=room)
-        return redirect("room_detail", room_id=room.id)
+        return JsonResponse({"message": "Invitation envoyée avec succès."}, status=201)
+
+    return JsonResponse({"error": "Méthode non autorisée."}, status=405)
 
 
 @login_required

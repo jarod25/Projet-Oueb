@@ -34,22 +34,10 @@
 
 /* Search bar */
 #suggestions-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    border: 1px solid var(--secondary-color);
     max-height: 200px;
     overflow-y: auto;
 }
 
-#suggestions-list li {
-    padding: 8px;
-    cursor: pointer;
-}
-
-#suggestions-list li:hover {
-    background-color: var(--bg-chat-color);
-}
 
 /* Form constraints */
 .errorlist li {

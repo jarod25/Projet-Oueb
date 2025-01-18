@@ -161,7 +161,7 @@ $(document).ready(function () {
         $(document).on("click", "#delete-message", function (e) {
             e.preventDefault();
             const button = $(this);
-            const messageLine = button.closest(".message-line");
+            const messageLine = button.closest("#message-line");
             const messageId = messageLine.data("message-id");
 
             if (messageId) {
@@ -173,10 +173,7 @@ $(document).ready(function () {
                     },
                     success: function () {
                         messageLine.remove();
-                        messageLine.remove();
-
-                        messageLine.remove();
-
+                        getMessages()
                     },
                     error: function () {
                         alert("Une erreur s'est produite lors de la suppression du message.");
@@ -189,15 +186,14 @@ $(document).ready(function () {
             e.preventDefault();
             isEditing = true; // Set editing flag
             const button = $(this);
-            const messageLine = button.closest(".message-line");
+            const messageLine = button.closest("#message-line");
             const messageId = messageLine.data("message-id");
-            const messageContent = messageLine.find(".message-content").text().trim();
-
+            const messageContent = messageLine.find(".text-break").text().trim();
             // Save original content for restoration if canceled
             messageLine.data("original-content", messageContent);
 
             // Replace the message content with a textarea and buttons
-            messageLine.find(".message-content").html(`
+            messageLine.find(".text-break").html(`
             <textarea class="edit-textarea form-control mb-2">${messageContent}</textarea>
             <button class="save-edit-button btn btn-sm btn-primary">Enregistrer</button>
             <button class="cancel-edit-button btn btn-sm btn-secondary">Annuler</button>
@@ -207,17 +203,17 @@ $(document).ready(function () {
         $(document).on("click", ".cancel-edit-button", function (e) {
             e.preventDefault();
             isEditing = false; // Reset editing flag
-            const messageLine = $(this).closest(".message-line");
+            const messageLine = $(this).closest("#message-line");
             const originalContent = messageLine.data("original-content");
 
             // Restore the original content
-            messageLine.find(".message-content").text(originalContent);
+            messageLine.find(".text-break").text(originalContent);
         });
 
         $(document).on("click", ".save-edit-button", function (e) {
             e.preventDefault();
             const button = $(this);
-            const messageLine = button.closest(".message-line");
+            const messageLine = button.closest("#message-line");
             const messageId = messageLine.data("message-id");
             const newContent = messageLine.find(".edit-textarea").val();
 
@@ -230,9 +226,10 @@ $(document).ready(function () {
                 },
                 success: function (response) {
                     isEditing = false; // Reset editing flag after save
-                    messageLine.find(".message-content").text(response.content);
+                    messageLine.find(".text-break").text(response.content);
                 },
                 error: function () {
+                    isEditing = false;
                     alert("Erreur lors de la modification du message.");
                 }
             });

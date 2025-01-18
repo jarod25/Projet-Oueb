@@ -133,6 +133,9 @@ def get_messages(request, room_id):
                 )
             return JsonResponse({'html_message': html_message})
 
+    # If no new messages after timeout, return an empty response
+    return JsonResponse({'html_message': ''})
+
 
 
 

@@ -99,11 +99,11 @@ $(document).ready(function () {
                         const parsedHtml = $("<div>").html(data.html_message.replace('&lt;br&gt;', '<br>'));
                         const newMessageIds = [];
 
-                        parsedHtml.find(".message-line").each(function () {
+                        parsedHtml.find("#message-line").each(function () {
                             newMessageIds.push($(this).data("message-id"));
                         });
 
-                        messagesContainer.find(".message-line").each(function () {
+                        messagesContainer.find("#message-line").each(function () {
                             const messageId = $(this).data("message-id");
                             if (!newMessageIds.includes(messageId)) {
                                 $(this).remove();
@@ -172,6 +172,7 @@ $(document).ready(function () {
                         csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
                     },
                     success: function () {
+                        setTimeout(getMessages, 1000);
                         messageLine.remove();
                         getMessages()
                     },
@@ -191,7 +192,7 @@ $(document).ready(function () {
             const messageContent = messageLine.find(".text-break").text().trim();
             // Save original content for restoration if canceled
             messageLine.data("original-content", messageContent);
-
+            getMessages()
             // Replace the message content with a textarea and buttons
             messageLine.find(".text-break").html(`
             <textarea class="edit-textarea form-control mb-2">${messageContent}</textarea>
@@ -216,7 +217,7 @@ $(document).ready(function () {
             const messageLine = button.closest("#message-line");
             const messageId = messageLine.data("message-id");
             const newContent = messageLine.find(".edit-textarea").val();
-
+            getMessages()
             $.ajax({
                 url: `/room/${messageId}/edit-message/`,
                 type: "POST",
@@ -226,10 +227,13 @@ $(document).ready(function () {
                 },
                 success: function (response) {
                     isEditing = false; // Reset editing flag after save
+                    getMessages()
                     messageLine.find(".text-break").text(response.content);
+                    getMessages()
                 },
                 error: function () {
                     isEditing = false;
+                    getMessages()
                     alert("Erreur lors de la modification du message.");
                 }
             });

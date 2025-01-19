@@ -5,7 +5,7 @@
         <!-- Header du Salon -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="mb-0 d-flex align-items-center">
-                <i class="bi bi-chat-left-text-fill me-2"></i>{{ room.name }}
+                <i class="bi bi-chat-left-text-fill me-2" id="chat-name-i"></i>{{ room.name }}
             </h2>
             <a href="{% url 'invite_user' room.id %}"
                class="btn btn-light rounded-5 p-2 invite-user-btn"
@@ -23,7 +23,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            {% include 'invite_user.html' %}
+                            {% include 'partials/invite_user.html' %}
                         </div>
                     </div>
                 </div>
@@ -84,13 +84,26 @@
                 <h5 class="p-2 border-bottom">Utilisateurs</h5>
                 <div class="overflow-auto flex-grow-1 p-2">
                     {% for user_status in room_users %}
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="bi bi-person-circle me-2"></i>
-                            <span class="flex-grow-1">{{ user_status.user.username }}</span>
-                            {% if user_status.status == "owner" %}
-                                <i class="bi bi-award-fill text-warning ms-2" title="Propriétaire"></i>
-                            {% endif %}
-                        </div>
+                        <button class="btn text-decoration-none p-0 ms-0 open-user-popover" id="user-btn"
+                                data-bs-toggle="popover"
+                                data-bs-html="true"
+                                data-id="{{ user_status.user.id }}"
+                                data-username="{{ user_status.user.username }}"
+                                data-role="{{ user_status.status }}"
+                                title="Modifier le rôle"
+                                data-bs-content=""
+                                data-bs-placement="left">
+                            <div class="d-flex align-items-center mb-2 user-item"
+                                 data-id="{{ user_status.user.id }}"
+                                 data-username="{{ user_status.user.username }}"
+                                 data-role="{{ user_status.status }}">
+                                <i class="bi bi-person-circle me-2"></i>
+                                <span class="flex-grow-1">{{ user_status.user.username }}</span>
+                                {% if user_status.status == "owner" %}
+                                    <i class="bi bi-award-fill text-warning ms-2" title="Propriétaire"></i>
+                                {% endif %}
+                            </div>
+                        </button>
                     {% empty %}
                         <p>Aucun utilisateur.</p>
                     {% endfor %}

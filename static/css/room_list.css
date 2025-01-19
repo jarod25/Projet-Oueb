@@ -1,0 +1,80 @@
+.room-title {
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    color: var(--dark-color);
+    padding: 0 1vh;
+}
+
+a[class="btn btn-link room-title"]:hover {
+    color: var(--secondary-color);
+}
+
+.add-room {
+    text-decoration: none;
+    color: var(--dark-color);
+    font-size: 2rem;
+}
+
+.add-room:hover {
+    color: var(--secondary-color);
+}
+
+.list-unstyled {
+    padding: 0;
+    margin: 0;
+}
+
+.room-item {
+    background-color: white;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+}
+
+.room-item:hover {
+    background-color: var(--bg-chat-color);
+}
+
+.room-link {
+    text-decoration: none;
+    color: var(--dark-color);
+    flex-grow: 1;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.delete-icon {
+    color: var(--danger-color);
+    transition: opacity 0.3s ease, color 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+    margin-left: 8px;
+}
+
+.room-item:hover .delete-icon {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.delete-icon:hover {
+    color: var(--primary-color-hover);
+}
+
+@media (max-width: 768px) {
+    .room-item {
+        flex-wrap: wrap;
+    }
+
+    .delete-icon {
+        margin-top: 0.5rem;
+    }
+}

@@ -1,4 +1,7 @@
+import json
+
 from dateutil.utils import today
+from django.views.decorators.csrf import csrf_exempt
 
 from user.models import User
 from django.http import JsonResponse
@@ -65,13 +68,15 @@ def room_detail_view(request, room_id):
         return redirect("room_list")
     room = get_object_or_404(Room, id=room_id)
     rooms = Room.objects.filter(members=user)
+    room_users = UserStatus.objects.filter(room=room)
     room_messages = room.messages.order_by("sent_at", "id")
     return render(request, "room_details.html", {
         "room": room,
         "room_messages": room_messages,
         "rooms": rooms,
         "today": now(),
-        "yesterday": now().date() - timedelta(days=1)
+        "yesterday": now().date() - timedelta(days=1),
+        "room_users": room_users
     })
 
 
@@ -168,7 +173,7 @@ def search_users(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
     query = request.GET.get('q', '')
     if query:
-        users = User.objects.exclude(id=user.id).filter(username__icontains=query)
+        users = User.objects.exclude(id=user.id).exclude(rooms=room_id).filter(username__icontains=query)
         matching_users = [{'id': user.id, 'username': user.username} for user in users]
         return JsonResponse(matching_users, safe=False)
     return JsonResponse({"error": "Error while searching users"}, safe=False)
@@ -183,7 +188,7 @@ def invite_user_view(request, room_id):
         invited_users = Invitation.objects.filter(room=room, status__in=['pending', 'accepted']).values_list('receiver',
                                                                                                              flat=True)
         users = User.objects.exclude(id=user.id).exclude(id__in=invited_users)
-        return render(request, "invite_user.html", {"room": room, "users": users})
+        return render(request, "partials/invite_user.html", {"room": room, "users": users})
 
     if request.method == "POST":
         receiver_id = request.POST.get("receiver_id")
@@ -202,29 +207,65 @@ def invite_user_view(request, room_id):
     return JsonResponse({"error": "Méthode non autorisée."}, status=405)
 
 
+@csrf_exempt
 @login_required
-def manage_invitation_view(request, invitation_id):
-    user = User.objects.get(id=request.session.get('user_id'))
-    invitation = get_object_or_404(Invitation, id=invitation_id, receiver=user)
-
-    if request.method == "GET":
-        return render(request, "manage_invitation.html", {"invitation": invitation})
-
+def respond_to_invitation_view(request):
     if request.method == "POST":
-        response = request.POST.get("response")
-        if response == "accept":
-            invitation.status = "accepted"
-            invitation.save()
-            invitation.room.members.add(user)
-            UserStatus.objects.create(user=user, room=invitation.room, status="user")
-        elif response == "decline":
-            invitation.status = "declined"
-            invitation.save()
-        return redirect("invitations_list")
+        try:
+            data = json.loads(request.body)
+            invitation_id = data.get("id")
+            response = data.get("response")
+            invitation = Invitation.objects.get(id=invitation_id, receiver=request.user)
+
+            if response == "accept":
+                invitation.status = "accepted"
+                invitation.save()
+                invitation.room.members.add(request.user)
+                return JsonResponse({"success": True, "message": "Invitation acceptée."})
+            elif response == "decline":
+                invitation.status = "declined"
+                invitation.save()
+                return JsonResponse({"success": True, "message": "Invitation déclinée."})
+        except Exception as e:
+            return JsonResponse({"success": False, "message": str(e)})
+
+    return JsonResponse({"success": False, "message": "Méthode non autorisée."})
 
 
 @login_required
-def invitations_list_view(request):
+def invitation_popover_view(request):
     user = User.objects.get(id=request.session.get('user_id'))
     invitations = Invitation.objects.filter(receiver=user, status="pending")
-    return render(request, "invitations_list.html", {"invitations": invitations})
+    return render(request, "partials/invitation_popover.html", {"invitations": invitations})
+
+
+@login_required
+def user_role_popover(request, room_id):
+    roles = UserStatus._meta.get_field('status').choices
+    return render(request, "partials/user_role.html", {"roles": roles})
+
+
+def update_user_role(request, room_id):
+    user = User.objects.get(id=request.session.get('user_id'))
+    room = get_object_or_404(Room, id=room_id)
+
+    if not room.members.filter(id=user.id).exists():
+        return JsonResponse({"error": "Vous n'êtes pas membre de ce salon."}, status=401)
+
+    if not UserStatus.objects.filter(user=user, room=room, status="owner").exists():
+        return JsonResponse({"error": "Vous n'êtes pas autorisé à effectuer cette action."}, status=403)
+
+    if request.method == "POST":
+        new_status = request.POST.get("role")
+        user_to_update_id = request.POST.get("user_id")
+        user_to_update = get_object_or_404(User, id=user_to_update_id)
+        if not new_status:
+            return JsonResponse({"error": "Le nouveau statut n'est pas spécifié."}, status=400)
+
+        if new_status not in dict(UserStatus._meta.get_field('status').flatchoices):
+            return JsonResponse({"error": "Statut invalide."}, status=400)
+
+        UserStatus.objects.update_or_create(user=user_to_update, room=room, defaults={"status": new_status})
+        return JsonResponse({"message": "Statut mis à jour avec succès."}, status=200)
+
+    return JsonResponse({"error": "Méthode non autorisée."}, status=405)

@@ -1,0 +1,16 @@
+<h1>Vos invitations en attente</h1>
+<ul>
+    {% for invitation in invitations %}
+        <li class="list-unstyled">
+            Invitation de {{ invitation.sender.username }} à rejoindre
+            {{ invitation.room.name }}
+            <form method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" name="response" value="accept">Accepter</button>
+                <button type="submit" name="response" value="decline">Decliner</button>
+            </form>
+        </li>
+    {% empty %}
+        <p>Pas d'invitation en attente</p>
+    {% endfor %}
+</ul>

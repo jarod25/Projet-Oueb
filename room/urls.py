@@ -10,6 +10,8 @@ urlpatterns = [
     path('<int:room_id>/get_messages/', views.get_messages, name='get_messages'),
     path('<int:room_id>/invite/', views.invite_user_view, name='invite_user'),
     path('<int:room_id>/invite/search_users', views.search_users, name='search_users'),
-    path('invitations/<int:invitation_id>/manage/', views.manage_invitation_view, name='manage_invitation'),
-    path('invitations/', views.invitations_list_view, name='invitations_list'),
+    path('respond_to_invitation/', views.respond_to_invitation_view, name='respond_to_invitation'),
+    path('invitation_popover/', views.invitation_popover_view, name='invitation_popover'),
+    path('<int:room_id>/user_role_popover/', views.user_role_popover, name='user_role_popover'),
+    path('<int:room_id>/update_user_role/', views.update_user_role, name='update_user_role'),
 ]

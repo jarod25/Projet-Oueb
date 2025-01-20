@@ -14,7 +14,7 @@ $(document).ready(function () {
                 success: function (data) {
                     if (data.html_message) {
                         messagesContainer.empty();
-                        let parsed_html = data.html_message.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+                        let parsed_html = data.html_message.replace(/&lt;br&gt;/g, '<br>');
                         messagesContainer.append(parsed_html);
                         scrollToBottom();
                     }

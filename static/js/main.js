@@ -1,5 +1,5 @@
 import './ajax_invite_user.js';
-import './ajax_manage_invitations.js';
+import './manage_invitations_popover.js';
 import './ajax_room_messages.js';
 import './ajax_search_users.js';
 import './invite_user_popover.js';

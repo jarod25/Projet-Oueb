@@ -210,21 +210,20 @@ def invite_user_view(request, room_id):
 @csrf_exempt
 @login_required
 def respond_to_invitation_view(request):
+    user = User.objects.get(id=request.session.get('user_id'))
     if request.method == "POST":
         try:
-            data = json.loads(request.body)
-            invitation_id = data.get("id")
-            response = data.get("response")
-            invitation = Invitation.objects.get(id=invitation_id, receiver=request.user)
-
+            invitation_id = request.POST.get("invitation_id")
+            response = request.POST.get("response")
+            invitation = Invitation.objects.get(id=invitation_id, receiver=user)
             if response == "accept":
                 invitation.status = "accepted"
                 invitation.save()
-                invitation.room.members.add(request.user)
+                invitation.room.members.add(user)
+                UserStatus.objects.create(user=user, room=invitation.room, status="user")
                 return JsonResponse({"success": True, "message": "Invitation acceptée."})
             elif response == "decline":
-                invitation.status = "declined"
-                invitation.save()
+                invitation.delete()
                 return JsonResponse({"success": True, "message": "Invitation déclinée."})
         except Exception as e:
             return JsonResponse({"success": False, "message": str(e)})

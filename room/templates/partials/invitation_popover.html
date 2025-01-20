@@ -1,13 +1,16 @@
-<h1>Vos invitations en attente</h1>
 <ul>
     {% for invitation in invitations %}
-        <li class="list-unstyled">
-            Invitation de {{ invitation.sender.username }} à rejoindre
-            {{ invitation.room.name }}
-            <form method="post" style="display:inline;">
+        <li class="list-unstyled" style="display:inline-block;">
+            <h5>Invitation de <strong>{{ invitation.sender.username }}</strong> à rejoindre
+                <strong>{{ invitation.room.name }}</strong></h5>
+            <form method="post" id="manage-invitation-form">
                 {% csrf_token %}
-                <button type="submit" name="response" value="accept">Accepter</button>
-                <button type="submit" name="response" value="decline">Decliner</button>
+                <button class="btn text-decoration-none p-0 ms-0" type="submit" name="response" value="accept"
+                        data-invitation-id="{{ invitation.id }}"><i class="bi bi-check-lg"></i>
+                </button>
+                <button class="btn text-decoration-none p-0 ms-0" type="submit" name="response" value="decline"
+                        data-invitation-id="{{ invitation.id }}"><i class="bi bi-x-lg"></i>
+                </button>
             </form>
         </li>
     {% empty %}

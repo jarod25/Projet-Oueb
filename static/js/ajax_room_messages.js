@@ -14,7 +14,8 @@ $(document).ready(function () {
                 success: function (data) {
                     if (data.html_message) {
                         messagesContainer.empty();
-                        messagesContainer.append(data.html_message);
+                        let parsed_html = data.html_message.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+                        messagesContainer.append(parsed_html);
                         scrollToBottom();
                     }
                 },

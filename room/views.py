@@ -95,47 +95,34 @@ def get_messages(request, room_id):
 
     if not room.members.filter(id=user_id).exists():
         return JsonResponse({"error": "Unauthorized"}, status=403)
-
-    last_message_time = last_message_times.get(room_id, now())
-
-    timeout = 30
-    start_time = now()
-    while (now() - start_time).seconds < timeout:
-        latest_message = room.messages.order_by("-sent_at").first()
-        if latest_message and latest_message.sent_at > last_message_time:
-            last_message_times[room_id] = latest_message.sent_at
-
-            room_messages = room.messages.order_by("sent_at", "id")
-            html_message = ""
-            for message in room_messages:
-                html_message += format_html(
-                    """
-                    <div class="mb-3 rounded" id="message-line" data-message-id="{id}">
-                        <p class="mb-1">
-                            <strong>{author}</strong>
-                            <span class="small fst-italic">
-                                {date}
-                            </span>
-                            <button type="button" title="Supprimer" id="delete-message" class="action-message px-1">
-                                <i class="bi bi-trash-fill"></i>
-                            </button>
-                            <button type="button" title="Modifier" id="edit-message" class="action-message px-1">
-                                <i class="bi bi-pencil-fill"></i>
-                            </button>
-                        </p>
-                        <p class="text-break">{content}</p>
-                    </div>
-                    """,
-                    id=message.id,
-                    author=message.author.username,
-                    date=format_message_date(message.sent_at),
-                    content=message.content.replace("\n", "<br>"),
-                )
-            return JsonResponse({'html_message': html_message})
-
-    # If no new messages after timeout, return an empty response
-    return JsonResponse({'html_message': ''})
-
+    
+    room_messages = room.messages.order_by("sent_at", "id")
+    html_message = ""
+    for message in room_messages:
+        html_message += format_html(
+            """
+            <div class="mb-3 rounded" id="message-line" data-message-id="{id}">
+                <p class="mb-1">
+                    <strong>{author}</strong>
+                    <span class="small fst-italic">
+                        {date}
+                    </span>
+                    <button type="button" title="Supprimer" id="delete-message" class="action-message px-1">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                    <button type="button" title="Modifier" id="edit-message" class="action-message px-1">
+                        <i class="bi bi-pencil-fill"></i>
+                    </button>
+                </p>
+                <p class="text-break">{content}</p>
+            </div>
+            """,
+            id=message.id,
+            author=message.author.username,
+            date=format_message_date(message.sent_at),
+            content=message.content.replace("\n", "<br>"),
+        )
+    return JsonResponse({'html_message': html_message})
 
 
 

@@ -1,7 +1,3 @@
-import './delete_message'
-import './modification_message'
-
-
 // This script is used to make an AJAX request to the server to get a list of usernames that match the query entered by the user in the receiver field.
 $(document).ready(function () {
     $(document).on('input', '#receiver', function () {
@@ -169,6 +165,88 @@ $(document).ready(function () {
         scrollToBottom();
 
     }
+
+    $(document).on("click", "#delete-message", function (e) {
+        e.preventDefault();
+        const button = $(this);
+        const messageLine = button.closest("#message-line");
+        const messageId = messageLine.data("message-id");
+    
+        if (messageId) {
+            $.ajax({
+                url: `/room/${messageId}/delete-message/`,
+                type: "POST",
+                data: {
+                    csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
+                },
+                success: function () {
+                    setTimeout(getMessages, 1000);
+                    messageLine.remove();
+                    getMessages()
+                },
+                error: function () {
+                    alert("Une erreur s'est produite lors de la suppression du message.");
+                },
+            });
+        }
+    });
+
+    $(document).on("click", "#edit-message", function (e) {
+        e.preventDefault();
+        isEditing = true; // Set editing flag
+        const button = $(this);
+        const messageLine = button.closest("#message-line");
+        const messageId = messageLine.data("message-id");
+        const messageContent = messageLine.find(".text-break").text().trim();
+        // Save original content for restoration if canceled
+        messageLine.data("original-content", messageContent);
+        getMessages()
+        // Replace the message content with a textarea and buttons
+        messageLine.find(".text-break").html(`
+        <textarea class="edit-textarea form-control mb-2">${messageContent}</textarea>
+        <button class="save-edit-button btn btn-sm btn-primary">Enregistrer</button>
+        <button class="cancel-edit-button btn btn-sm btn-secondary">Annuler</button>
+    `);
+    });
+    
+    $(document).on("click", ".cancel-edit-button", function (e) {
+        e.preventDefault();
+        isEditing = false; // Reset editing flag
+        const messageLine = $(this).closest("#message-line");
+        const originalContent = messageLine.data("original-content");
+    
+        // Restore the original content
+        messageLine.find(".text-break").text(originalContent);
+    });
+    
+    $(document).on("click", ".save-edit-button", function (e) {
+        e.preventDefault();
+        const button = $(this);
+        const messageLine = button.closest("#message-line");
+        const messageId = messageLine.data("message-id");
+        const newContent = messageLine.find(".edit-textarea").val();
+        getMessages()
+        $.ajax({
+            url: `/room/${messageId}/edit-message/`,
+            type: "POST",
+            data: {
+                csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
+                content: newContent,
+            },
+            success: function (response) {
+                isEditing = false; // Reset editing flag after save
+                getMessages()
+                messageLine.find(".text-break").text(response.content);
+                getMessages()
+            },
+            error: function () {
+                isEditing = false;
+                getMessages()
+                alert("Erreur lors de la modification du message.");
+            }
+        });
+        getMessages();
+    });
 });
 
 $(document).ready(function () {

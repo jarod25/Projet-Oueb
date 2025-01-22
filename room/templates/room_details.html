@@ -2,39 +2,37 @@
 
 {% block chat %}
     <div class="container-fluid d-flex flex-column vh-85">
-        <!-- Header du Salon -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="mb-0 d-flex align-items-center">
                 <i class="bi bi-chat-left-text-fill me-2" id="chat-name-i"></i>{{ room.name }}
             </h2>
-            <a href="{% url 'invite_user' room.id %}"
-               class="btn btn-light rounded-5 p-2 invite-user-btn"
-               data-bs-toggle="tooltip"
-               title="Inviter des utilisateurs">
+            <button class="btn btn-light rounded-5 p-2 invite-user-btn" id="invite-user"
+                    data-bs-toggle="popover"
+                    data-bs-html="true"
+                    data-bs-content=""
+                    title="Inviter des utilisateurs">
                 <i class="bi bi-person-plus-fill"></i>
-            </a>
+            </button>
+            <button id="mobile-users-button" class="btn btn-light rounded-5 p-2 d-md-none" style="display: none;"
+                    data-bs-toggle="offcanvas" data-bs-target="#usersOffcanvas" aria-controls="usersOffcanvas">
+                <i class="bi bi-person-circle"></i>
+            </button>
 
-            <!-- Modal -->
-            <div class="modal fade" id="inviteUserModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Inviter des utilisateurs</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            {% include 'partials/invite_user.html' %}
-                        </div>
-                    </div>
+            <!-- Offcanvas for small screens -->
+            <div class="offcanvas offcanvas-end" id="usersOffcanvas"
+                 aria-labelledby="usersOffcanvasLabel">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="usersOffcanvasLabel">Utilisateurs</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+                    {% include 'partials/user_edit_role.html' %}
                 </div>
             </div>
         </div>
 
-        <!-- Corps principal : Messages et Liste des Utilisateurs -->
         <div class="row flex-grow-1 overflow-hidden">
-            <!-- Colonne des Messages -->
-            <div class="col-10 d-flex flex-column h-100">
-                <!-- Conteneur des Messages -->
+            <div class="col-md-10 col-12 d-flex flex-column h-100">
                 <div class="overflow-auto flex-grow-1 p-3" id="messages-container" data-room-id="{{ room.id }}">
                     {% for message in room_messages %}
                         <div class="mb-3 rounded" id="message-line" data-message-id="{{ message.id }}">
@@ -79,36 +77,15 @@
                 </div>
             </div>
 
-            <!-- Colonne des Utilisateurs -->
-            <div class="col-2 d-flex flex-column h-100 border-start">
+            <div id="desktop-users-column" class="col-2 d-none d-md-flex flex-column h-100 border-start">
                 <h5 class="p-2 border-bottom">Utilisateurs</h5>
                 <div class="overflow-auto flex-grow-1 p-2">
-                    {% for user_status in room_users %}
-                        <button class="btn text-decoration-none p-0 ms-0 open-user-popover" id="user-btn"
-                                data-bs-toggle="popover"
-                                data-bs-html="true"
-                                data-id="{{ user_status.user.id }}"
-                                data-username="{{ user_status.user.username }}"
-                                data-role="{{ user_status.status }}"
-                                title="Modifier le rôle"
-                                data-bs-content=""
-                                data-bs-placement="left">
-                            <div class="d-flex align-items-center mb-2 user-item"
-                                 data-id="{{ user_status.user.id }}"
-                                 data-username="{{ user_status.user.username }}"
-                                 data-role="{{ user_status.status }}">
-                                <i class="bi bi-person-circle me-2"></i>
-                                <span class="flex-grow-1">{{ user_status.user.username }}</span>
-                                {% if user_status.status == "owner" %}
-                                    <i class="bi bi-award-fill text-warning ms-2" title="Propriétaire"></i>
-                                {% endif %}
-                            </div>
-                        </button>
-                    {% empty %}
-                        <p>Aucun utilisateur.</p>
-                    {% endfor %}
+                    {% include 'partials/user_edit_role.html' %}
                 </div>
             </div>
+
         </div>
+
     </div>
+
 {% endblock %}

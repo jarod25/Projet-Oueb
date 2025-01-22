@@ -1,8 +1,4 @@
-import json
-
-from dateutil.utils import today
 from django.views.decorators.csrf import csrf_exempt
-
 from user.models import User
 from django.http import JsonResponse
 from django.utils.html import format_html
@@ -11,7 +7,6 @@ from .models import Room, Invitation, UserStatus, Message
 from user import login_required
 from django.utils.timezone import now
 from datetime import date, timedelta
-from django.contrib import messages
 from time import sleep
 
 
@@ -21,22 +16,26 @@ def room_list_view(request):
     user = User.objects.get(id=user_id)
 
     # Filtrer les salons où l'utilisateur est membre
-    user_rooms = Room.objects.filter(members=user)
+    rooms = Room.objects.filter(members=user)
 
-    return render(request, "room_list.html", {"rooms": user_rooms})
+    return render(request, "room_list.html", {"rooms": rooms})
 
 
 @login_required
 def create_room_view(request):
+    user = User.objects.get(id=request.session.get('user_id'))
+
+    if request.method == "GET":
+        # Renvoie uniquement le formulaire dans une modal
+        return render(request, "partials/create_room_modal.html")
+
     if request.method == "POST":
         # Récupérer le nom du salon à partir du formulaire
         room_name = request.POST.get("name")
-        user_id = request.session.get('user_id')
-        user = User.objects.get(id=user_id)
+
         # Vérifier si un salon avec le même nom existe déjà
         if Room.objects.filter(name=room_name).exists():
-            messages.error(request, "Un salon avec le même nom existe déjà.")
-            return render(request, "create_room.html")
+            return JsonResponse({"error": "Un salon avec le même nom existe déjà."}, status=400)
 
         # Créer le salon
         room = Room.objects.create(name=room_name)
@@ -47,11 +46,11 @@ def create_room_view(request):
         # Définir l'utilisateur comme propriétaire (owner) avec le modèle UserStatus
         UserStatus.objects.create(user=user, room=room, status="owner")
 
-        # Rediriger vers la liste des salons après création
-        return redirect("room_list")
+        # Renvoie une réponse JSON indiquant la réussite
+        return redirect("room_detail", room.id)
 
-    # Afficher la page de création de salon pour les requêtes GET
-    return render(request, "create_room.html")
+    # Si la méthode n'est pas supportée, renvoie une erreur
+    return JsonResponse({"error": "Méthode non autorisée."}, status=405)
 
 
 @login_required
@@ -188,7 +187,7 @@ def invite_user_view(request, room_id):
         invited_users = Invitation.objects.filter(room=room, status__in=['pending', 'accepted']).values_list('receiver',
                                                                                                              flat=True)
         users = User.objects.exclude(id=user.id).exclude(id__in=invited_users)
-        return render(request, "partials/invite_user.html", {"room": room, "users": users})
+        return render(request, "partials/invite_user_popover.html", {"room": room, "users": users})
 
     if request.method == "POST":
         receiver_id = request.POST.get("receiver_id")
@@ -235,15 +234,16 @@ def respond_to_invitation_view(request):
 def invitation_popover_view(request):
     user = User.objects.get(id=request.session.get('user_id'))
     invitations = Invitation.objects.filter(receiver=user, status="pending")
-    return render(request, "partials/invitation_popover.html", {"invitations": invitations})
+    return render(request, "partials/manage_invitation_popover.html", {"invitations": invitations})
 
 
 @login_required
 def user_role_popover(request, room_id):
     roles = UserStatus._meta.get_field('status').choices
-    return render(request, "partials/user_role.html", {"roles": roles})
+    return render(request, "partials/user_role_popover.html", {"roles": roles})
 
 
+@login_required
 def update_user_role(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
     room = get_object_or_404(Room, id=room_id)
@@ -268,3 +268,13 @@ def update_user_role(request, room_id):
         return JsonResponse({"message": "Statut mis à jour avec succès."}, status=200)
 
     return JsonResponse({"error": "Méthode non autorisée."}, status=405)
+
+@login_required
+def leave_room_view(request, room_id):
+    user = User.objects.get(id=request.session.get('user_id'))
+    room = get_object_or_404(Room, id=room_id)
+    if room.members.filter(id=user.id).exists() and UserStatus.objects.filter(user=user, room=room).exists() and UserStatus.objects.get(user=user, room=room).status != "owner":
+        room.members.remove(user)
+        UserStatus.objects.get(user=user, room=room).delete()
+        return redirect("room_list")
+    return redirect("room_list")

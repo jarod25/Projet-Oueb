@@ -4,28 +4,56 @@
     <div class="container">
         <div class="row">
             <div class="col-12 col-md-2">
-                <button id="invitationPopover" class="btn text-decoration-none p-0 ms-0 room-title" data-bs-toggle="popover"
-                   title="Invitations" data-bs-html="true" data-bs-content="Chargement...">
+                <button id="invitationPopover" class="btn text-decoration-none p-0 ms-0 room-title w-100"
+                        data-bs-toggle="popover"
+                        title="Invitations" data-bs-html="true" data-bs-content="Chargement...">
                     <i class="bi bi-envelope-fill me-2"></i> Invitations
                 </button>
-                <p class="room-title">Salons <a href="{% url 'create_room' %}" class="add-room"
-                                                title="Créer un salon">+</a></p>
-                <ul class="list-unstyled">
+                <p class="room-title mt-3">
+                    Salons
+                    <a href="{% url 'create_room' %}" class="add-room create-room-btn"
+                       data-bs-toggle="tooltip" title="Créer un salon">+</a>
+                </p>
+                <div class="modal fade" id="createRoomModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Créer un salon</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                {% include 'partials/create_room_modal.html' %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="list-unstyled mt-3 overflow-scroll room-list">
                     {% for room in rooms %}
                         <li class="room-item d-flex align-items-center justify-content-between p-2">
-                            <a href="{% url 'room_detail' room.id %}"
-                               class="room-link text-truncate">{{ room.name }}</a>
-                            <a href="{% url 'delete_room' room.id %}" class="delete-icon ms-2"
-                               onclick="return confirm('Êtes vous sur de vouloir supprimer le salon ?')">
-                                <i class="bi bi-trash-fill"></i>
+                            <a href="{% url 'room_detail' room.id %}" class="room-link text-truncate w-75">
+                                {{ room.name }}
                             </a>
+                            {% if current_user == room.members.first %}
+                                <a href="{% url 'delete_room' room.id %}" class="room-icon ms-2"
+                                   onclick="return confirm('Êtes vous sur de vouloir supprimer le salon ?')">
+                                    <i class="bi bi-trash-fill"></i>
+                                </a>
+                            {% else %}
+                                <a href="{% url 'leave_room' room.id %}" class="room-icon ms-2"
+                                   onclick="return confirm('Êtes vous sur de vouloir quitter le salon ?')">
+                                    <i class="bi bi-box-arrow-left"></i>
+                                </a>
+                            {% endif %}
                         </li>
                     {% endfor %}
                 </ul>
             </div>
+
             <div class="col-12 col-md-10">
                 {% block chat %}
-                    <h1>Choisissez un salon pour commencer à discuter</h1>
+                    <h1 class="text-center my-5">Choisissez un salon pour commencer à discuter</h1>
                 {% endblock %}
             </div>
         </div>

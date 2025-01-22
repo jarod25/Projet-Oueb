@@ -52,7 +52,12 @@ a[class="btn btn-link room-title"]:hover {
     white-space: nowrap;
 }
 
-.delete-icon {
+.room-list {
+    max-height: 75vh;
+    overflow: hidden;
+}
+
+.room-icon {
     color: var(--danger-color);
     transition: opacity 0.3s ease, color 0.3s ease;
     opacity: 0;
@@ -60,12 +65,12 @@ a[class="btn btn-link room-title"]:hover {
     margin-left: 8px;
 }
 
-.room-item:hover .delete-icon {
+.room-item:hover .room-icon {
     opacity: 1;
     pointer-events: auto;
 }
 
-.delete-icon:hover {
+.room-icon:hover {
     color: var(--primary-color-hover);
 }
 
@@ -74,7 +79,7 @@ a[class="btn btn-link room-title"]:hover {
         flex-wrap: wrap;
     }
 
-    .delete-icon {
+    .room-icon {
         margin-top: 0.5rem;
     }
 }

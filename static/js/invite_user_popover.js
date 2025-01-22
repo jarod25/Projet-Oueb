@@ -1,12 +1,16 @@
 $(document).ready(function () {
-    $('.invite-user-btn').on('click', function (e) {
+    function closeAllPopovers() {
+        $('.popover').remove();
+    }
+
+    $('#invitePopover').on('click', function (e) {
         e.preventDefault();
-        const url = $(this).attr('href');
-        $.get(url, function (data) {
-            $('#inviteUserModal .modal-body').html(data);
-            $('#inviteUserModal').modal('show');
-        }).fail(function () {
-            alert('Erreur lors du chargement. Veuillez réessayer.');
-        });
+        const $trigger = $(this);
+    });
+
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('.popover, .open-user-popover').length) {
+            closeAllPopovers();
+        }
     });
 });

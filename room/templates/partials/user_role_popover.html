@@ -1,0 +1,14 @@
+<form id="popoverForm">
+    <div class="mb-2">
+        <strong><h4 id="popover-username"></h4></strong>
+    </div>
+    <div class="mb-2">
+        <label for="popover-role" class="form-label">Rôle</label>
+        <select id="popover-role" class="form-select">
+            {% for role, role_name in roles %}
+                <option value="{{ role }}">{{ role_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm mt-2" id="savePopoverRole">Enregistrer</button>
+</form>

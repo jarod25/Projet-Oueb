@@ -1,13 +1,13 @@
 services:
   projet-oueb:
-    image: jarod25/projet-oueb
+    image: jarod25/projet_oueb
     build: .
     restart: unless-stopped
     volumes:
       - type: bind
         source: ./db.sqlite3
         target: /app/db.sqlite3
-      - ./static:/app/static
+      - ./static:/app/staticfiles
     environment:
       DJANGO_CSRF_TRUSTED_ORIGINS: 'http://localhost:8000'
 

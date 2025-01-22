@@ -1,0 +1,40 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+/* Search bar */
+#suggestions-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* Form constraints */
+.errorlist li {
+    color: var(--danger-color);
+    list-style-type: none;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-color) var(--light-color);
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+}
+
+*::-webkit-scrollbar-thumb {
+    scrollbar-color: var(--primary-color);
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    scrollbar-color: var(--primary-color-hover);
+}
+
+.popover {
+    background-color: var(--light-color);
+    border: 1px solid var(--primary-color);
+    max-width: 400px;
+}

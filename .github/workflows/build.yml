@@ -24,8 +24,8 @@ jobs:
       - name: pull image on VPS
         uses: appleboy/ssh-action@master
         with:
-            host: ${{ secrets.HOST }}
-            username: ${{ secrets.USERNAME }}
-            key: ${{ secrets.SSH_KEY }}
-            script: cd ${{ secrets.PATH }} && docker compose up --pull always -d
-        shell: sh
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: cd ${{ secrets.PATH }} && docker compose up --pull always -d
+          shell: sh

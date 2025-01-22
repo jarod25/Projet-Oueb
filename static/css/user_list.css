@@ -1,0 +1,11 @@
+#user-btn:hover {
+    background-color: var(--warning-color);
+}
+
+#user-btn.active {
+    background-color: var(--warning-color);
+}
+
+#chat-name-i {
+    font-size: 1.5rem;
+}

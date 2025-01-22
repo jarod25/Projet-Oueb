@@ -1,0 +1,22 @@
+<div class="container-fluid">
+    {% if error %}
+        <div class="alert alert-danger text-center" role="alert">
+            {{ error }}
+        </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'create_room' %}">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="name" class="form-label">Nom du salon :</label>
+            <input type="text" id="name" name="name" class="form-control" placeholder="Entrez le nom du salon" required>
+        </div>
+
+        <div class="text-end">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Créer
+            </button>
+        </div>
+    </form>
+</div>

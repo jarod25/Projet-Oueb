@@ -1,0 +1,78 @@
+.vh-85 {
+    height: 85vh;
+    max-height: 85vh;
+}
+
+.flex-grow-1 {
+    flex-grow: 1;
+}
+
+.h-100 {
+    height: 100%;
+}
+
+.overflow-hidden {
+    overflow: hidden;
+}
+
+.overflow-auto {
+    overflow: auto;
+}
+
+.text-gray-300 {
+    color: var(--secondary-color) !important;
+}
+
+.bg-light {
+    background-color: var(--light-color) !important;
+}
+
+textarea#msg {
+    resize: none;
+    background-color: var(--light-color);
+}
+
+.emoji-btn,
+.send-btn {
+    background-color: transparent;
+    border: none;
+    font-size: 2rem;
+    color: var(--secondary-color);
+    cursor: pointer;
+}
+
+.emoji-btn:hover,
+.send-btn:hover {
+    color: var(--primary-color);
+}
+
+.emoji-btn:focus,
+.send-btn:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.action-message {
+    visibility: hidden;
+    background-color: transparent;
+    border: none;
+    color: var(--primary-color);
+    float: right;
+    cursor: pointer;
+    font-size: 1.2em;
+}
+
+#message-line:hover {
+    background-color: var(--warning-color);
+    margin: 0 -1vh;
+    padding: 0 1vh;
+    padding-bottom: -0.1vh;
+}
+
+#message-line:hover .action-message {
+    visibility: visible;
+}
+
+.action-message:hover {
+    color: red;
+}

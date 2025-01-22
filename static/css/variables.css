@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat:400,600,700');
+@import url('https://fonts.googleapis.com/css?family=Catamaran:400,800');
+@import url('https://fonts.googleapis.com/css?family=Nunito:400,700');
+
+:root {
+    --primary-color: #e27b7e; /* Rose doux */
+    --primary-color-hover: #d8646b; /* Rose foncé */
+    --secondary-color: #c97c83; /* Rose grisâtre */
+    --success-color: #ef9aa6; /* Rose pâle */
+    --info-color: #ffb3b8; /* Rose clair */
+    --warning-color: #f6d9db; /* Rose pêche */
+    --danger-color: #d8646b; /* Rouge rosé */
+    --light-color: #fce4e8; /* Rose pastel */
+    --dark-color: #803f47; /* Bordeaux */
+    --bg-chat-color: #f9e1e4; /* Fond rose pâle */
+}

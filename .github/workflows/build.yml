@@ -23,7 +23,7 @@ jobs:
         run: docker push jarod25/projet_oueb
 
       - name: pull image on VPS
-        uses: appleboy/ssh-action@V1.2.0
+        uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}

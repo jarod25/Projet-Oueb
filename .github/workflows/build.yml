@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [ main ]
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
@@ -25,6 +25,10 @@ jobs:
       - name: Publish image to Docker Hub
         run: docker push jarod25/projet_oueb
 
+  deploy:
+    - runs-on: ubuntu-latest
+    - if: github.ref == 'refs/heads/main'
+    - steps:
       - name: pull image on VPS
         uses: appleboy/ssh-action@v1.2.0
         with:

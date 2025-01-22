@@ -102,10 +102,15 @@ def get_messages(request, room_id):
     timeout = 30
     start_time = now()
     while (now() - start_time).seconds < timeout:
-        latest_message = room.messages.order_by("-sent_at").first()
-        if latest_message and latest_message.sent_at > last_message_time:
-            last_message_times[room_id] = latest_message.sent_at
+        # Récupère le dernier message envoyé ou modifié
+        latest_message = room.messages.order_by("-sent_at", "-updated_at").first()
+        
+        # Vérifie si le dernier message est nouveau ou a été mis à jour
+        if latest_message and (latest_message.sent_at > last_message_time or latest_message.updated_at > last_message_time):
+            # Met à jour le dernier temps enregistré
+            last_message_times[room_id] = max(latest_message.sent_at, latest_message.updated_at)
 
+            # Prépare les messages pour l'affichage
             room_messages = room.messages.order_by("sent_at", "id")
             html_message = ""
             for message in room_messages:
@@ -232,8 +237,15 @@ def delete_message(request, message_id):
     message = get_object_or_404(Message, id=message_id)
     if message.author.id != request.session.get('user_id'):
         return JsonResponse({"error": "Unauthorized"}, status=403)
+    
+    room_id = message.room.id
     message.delete()
+    
+    # Met à jour le temps de dernière modification pour la salle
+    last_message_times[room_id] = now()
+    
     return JsonResponse({"status": "ok"})
+
 
 @login_required
 def edit_message(request, message_id):

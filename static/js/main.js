@@ -180,7 +180,6 @@ $(document).ready(function () {
                     csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
                 },
                 success: function () {
-                    setTimeout(getMessages, 1000);
                     messageLine.remove();
                     getMessages()
                 },

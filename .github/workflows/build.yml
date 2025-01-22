@@ -27,6 +27,5 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_KEY }}
           script: cd ${{ secrets.PATH }} && docker compose up --pull always -d
-          shell: sh

@@ -16,6 +16,7 @@ jobs:
         with:
           username: jarod25
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
       - name: Build Docker image
         run: docker build -t jarod25/projet_oueb .
 

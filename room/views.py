@@ -110,7 +110,7 @@ def get_messages(request, room_id):
     start_time = now()
     while (now() - start_time).seconds < timeout:
         # Récupère le dernier message envoyé ou modifié
-        latest_message = room.messages.order_by("-sent_at", "-updated_at").first()
+        latest_message = room.messages.order_by("-sent_at").first()
 
         # Vérifie si le dernier message est nouveau ou a été mis à jour
         if latest_message and (latest_message.sent_at > last_message_time or latest_message.updated_at > last_message_time):

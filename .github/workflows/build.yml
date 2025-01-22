@@ -30,3 +30,4 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.SSH_KEY }}
           script: cd ${{ secrets.PATH }} && docker compose up --pull always -d
+          debug: true

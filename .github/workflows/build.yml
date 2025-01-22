@@ -26,6 +26,4 @@ jobs:
             host: ${{ secrets.HOST }}
             username: ${{ secrets.USERNAME }}
             key: ${{ secrets.SSH_KEY }}
-            script: |
-                cd ${{ secrets.PATH }}
-                docker compose up --pull always -d
+            script: cd ${{ secrets.PATH }} && docker compose up --pull always -d

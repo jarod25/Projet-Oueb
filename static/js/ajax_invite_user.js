@@ -6,7 +6,7 @@ $(document).ready(function () {
         let infos = $('#infos');
 
         $.ajax({
-            url: `/room/${roomId}/invite/`,
+            url: `/room/${roomId}/invite_user/`,
             method: 'POST',
             headers: {'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()},
             data: {

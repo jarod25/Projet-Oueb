@@ -29,7 +29,7 @@
                     </div>
                 </div>
 
-                <ul class="list-unstyled mt-3 overflow-scroll room-list">
+                <ul class="list-unstyled overflow-auto room-list">
                     {% for room in rooms %}
                         <li class="room-item d-flex align-items-center justify-content-between p-2">
                             <a href="{% url 'room_detail' room.room.id %}" class="room-link text-truncate w-75">

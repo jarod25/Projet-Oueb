@@ -1,10 +1,15 @@
+from django.core.validators import MinLengthValidator
 from django.db import models
 from user.models import User
 
 
 # Create your models here.
 class Room(models.Model):
-    name = models.CharField(max_length=127, unique=True)
+    name = models.CharField(
+        max_length=127,
+        unique=True,
+        validators=[MinLengthValidator(5)]
+    )
     members = models.ManyToManyField(User, related_name="rooms")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -15,8 +20,16 @@ class Room(models.Model):
 class Message(models.Model):
     content = models.TextField()
     sent_at = models.DateTimeField(auto_now_add=True)
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name='messages')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='messages')
+    room = models.ForeignKey(
+        Room,
+        on_delete=models.CASCADE,
+        related_name='messages'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='messages'
+    )
 
     def __str__(self):
         return f'{self.author.username} - {self.room.name} - {self.content if len(self.content) < 25 else self.content[:25] + "..."}'
@@ -47,8 +60,16 @@ class UserStatus(models.Model):
 
 class Invitation(models.Model):
     room = models.ForeignKey(Room, on_delete=models.CASCADE)
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_invitations')
-    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_invitations')
+    sender = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='sent_invitations'
+    )
+    receiver = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='received_invitations'
+    )
     status = models.CharField(
         max_length=127,
         choices=[

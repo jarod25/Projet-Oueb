@@ -1,6 +1,7 @@
 from django.views.decorators.csrf import csrf_exempt
 from user.models import User
 from django.http import JsonResponse
+from django.contrib import messages
 from django.utils.html import format_html
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Room, Invitation, UserStatus, Message
@@ -16,10 +17,14 @@ def room_list_view(request):
     user_id = request.session.get('user_id')
     user = User.objects.get(id=user_id)
 
-    # Filtrer les salons où l'utilisateur est membre
     rooms = Room.objects.filter(members=user)
+    rooms_with_owner = []
+    for room in rooms:
+        owner_status = UserStatus.objects.filter(room=room, status="owner").first()
+        owner = owner_status.user if owner_status else None
+        rooms_with_owner.append({"room": room, "owner": owner})
 
-    return render(request, "room_list.html", {"rooms": rooms})
+    return render(request, "room_list.html", {"rooms": rooms_with_owner})
 
 
 @login_required
@@ -56,6 +61,11 @@ def create_room_view(request):
 
 @login_required
 def delete_room_view(request, room_id):
+    user = User.objects.get(id=request.session.get('user_id'))
+    user_status = UserStatus.objects.filter(user=user, room=room_id, status="owner")
+    if not user_status:
+        messages.error(request, "Vous n'êtes pas autorisé à effectuer cette action.")
+        return redirect("room_list")
     room = get_object_or_404(Room, id=room_id)
     room.delete()
     return redirect("room_list")
@@ -68,12 +78,17 @@ def room_detail_view(request, room_id):
         return redirect("room_list")
     room = get_object_or_404(Room, id=room_id)
     rooms = Room.objects.filter(members=user)
+    rooms_with_owner = []
+    for room in rooms:
+        owner_status = UserStatus.objects.filter(room=room, status="owner").first()
+        owner = owner_status.user if owner_status else None
+        rooms_with_owner.append({"room": room, "owner": owner})
     room_users = UserStatus.objects.filter(room=room)
     room_messages = room.messages.order_by("sent_at", "id")
     return render(request, "room_details.html", {
         "room": room,
         "room_messages": room_messages,
-        "rooms": rooms,
+        "rooms": rooms_with_owner,
         "today": now(),
         "yesterday": now().date() - timedelta(days=1),
         "room_users": room_users
@@ -111,9 +126,12 @@ def get_messages(request, room_id):
     while (now() - start_time).seconds < timeout:
         # Récupère le dernier message envoyé ou modifié
         latest_message = room.messages.order_by("-sent_at").first()
+        if latest_message and latest_message.sent_at > last_message_time:
+            last_message_times[room_id] = latest_message.sent_at
 
         # Vérifie si le dernier message est nouveau ou a été mis à jour
-        if latest_message and (latest_message.sent_at > last_message_time or latest_message.updated_at > last_message_time):
+        if latest_message and (
+                latest_message.sent_at > last_message_time or latest_message.updated_at > last_message_time):
             # Met à jour le dernier temps enregistré
             last_message_times[room_id] = max(latest_message.sent_at, latest_message.updated_at)
 
@@ -275,15 +293,21 @@ def update_user_role(request, room_id):
 
     return JsonResponse({"error": "Méthode non autorisée."}, status=405)
 
+
 @login_required
 def leave_room_view(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
     room = get_object_or_404(Room, id=room_id)
-    if room.members.filter(id=user.id).exists() and UserStatus.objects.filter(user=user, room=room).exists() and UserStatus.objects.get(user=user, room=room).status != "owner":
+    if (
+            room.members.filter(id=user.id).exists()
+            and UserStatus.objects.filter(user=user, room=room).exists()
+            and UserStatus.objects.get(user=user, room=room).status != "owner"
+    ):
         room.members.remove(user)
         UserStatus.objects.get(user=user, room=room).delete()
         return redirect("room_list")
     return redirect("room_list")
+
 
 @login_required
 def delete_message(request, message_id):

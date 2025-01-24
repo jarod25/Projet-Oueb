@@ -3,6 +3,24 @@
     max-height: 85vh;
 }
 
+@media (max-width: 768px) {
+    .vh-85 {
+        margin-bottom: 7vh;
+    }
+}
+
+@media (max-width: 343px) {
+    .vh-85 {
+        margin-bottom: 10vh;
+    }
+}
+
+@media (max-width: 233px) {
+    .vh-85 {
+        margin-bottom: 13vh;
+    }
+}
+
 .flex-grow-1 {
     flex-grow: 1;
 }
@@ -75,4 +93,17 @@ textarea#msg {
 
 .action-message:hover {
     color: red;
+}
+
+.popover-content {
+    max-width: 90%;
+    min-width: 300px;
+    padding: 1rem;
+    word-wrap: break-word;
+}
+
+@media (max-width: 576px) {
+    .popover-content {
+        max-width: 100%;
+    }
 }

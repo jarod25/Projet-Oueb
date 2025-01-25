@@ -1,4 +1,4 @@
-import {getMessages, state} from "./ajax_room_messages.js";
+import {getMessages} from "./ajax_room_messages.js";
 
 $(document).on("click", "#delete-message", function (e) {
     e.preventDefault();
@@ -14,7 +14,6 @@ $(document).on("click", "#delete-message", function (e) {
                 csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
             },
             success: function () {
-                setTimeout(getMessages, 1000);
                 messageLine.remove();
                 getMessages();
             },

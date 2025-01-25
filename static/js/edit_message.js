@@ -33,7 +33,7 @@ $(document).on("click", ".save-edit-button", function (e) {
     const messageLine = button.closest("#message-line");
     const messageId = messageLine.data("message-id");
     const newContent = messageLine.find(".edit-textarea").val();
-    getMessages()
+
     $.ajax({
         url: `/room/${messageId}/edit-message/`,
         type: "POST",
@@ -42,16 +42,12 @@ $(document).on("click", ".save-edit-button", function (e) {
             content: newContent,
         },
         success: function (response) {
-            state.isEditing = false; // Reset editing flag after save
-            getMessages()
+            state.isEditing = false;
             messageLine.find(".text-break").text(response.content);
             getMessages()
         },
         error: function () {
-            state.isEditing = false;
-            getMessages()
             alert("Erreur lors de la modification du message.");
         }
     });
-    getMessages();
 });

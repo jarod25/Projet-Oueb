@@ -1,13 +1,16 @@
+from dateutil.utils import today
+from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from user.models import User
 from django.http import JsonResponse
 from django.contrib import messages
 from django.utils.html import format_html
+from django.core.cache import cache
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Room, Invitation, UserStatus, Message
 from user import login_required
 from django.utils.timezone import now
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from django.contrib import messages
 from time import sleep
 
@@ -79,10 +82,10 @@ def room_detail_view(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     rooms = Room.objects.filter(members=user)
     rooms_with_owner = []
-    for room in rooms:
-        owner_status = UserStatus.objects.filter(room=room, status="owner").first()
+    for owner_room in rooms:
+        owner_status = UserStatus.objects.filter(room=owner_room, status="owner").first()
         owner = owner_status.user if owner_status else None
-        rooms_with_owner.append({"room": room, "owner": owner})
+        rooms_with_owner.append({"room": owner_room, "owner": owner})
     room_users = UserStatus.objects.filter(room=room)
     room_messages = room.messages.order_by("sent_at", "id")
     return render(request, "room_details.html", {
@@ -95,19 +98,6 @@ def room_detail_view(request, room_id):
     })
 
 
-def format_message_date(sent_at):
-    today = date.today()
-    yesterday = today - timedelta(days=1)
-
-    if sent_at.date() == today:
-        return format_html('<span class="message-date text-muted">Aujourd\'hui à {}</span>', sent_at.strftime('%H:%M'))
-    elif sent_at.date() == yesterday:
-        return format_html('<span class="message-date text-muted">Hier à {}</span>', sent_at.strftime('%H:%M'))
-    else:
-        return format_html('<span class="message-date text-muted">Le {} à {}</span>', sent_at.strftime('%d/%m/%Y'),
-                           sent_at.strftime('%H:%M'))
-
-
 last_message_times = {}
 
 
@@ -115,54 +105,37 @@ last_message_times = {}
 def get_messages(request, room_id):
     user = request.session.get('user_id')
     room = get_object_or_404(Room, id=room_id)
+    today = date.today()
+    yesterday = today - timedelta(days=1)
 
     if not room.members.filter(id=user).exists():
         return JsonResponse({"error": "Unauthorized"}, status=403)
 
-    last_message_time = last_message_times.get(room_id, now())
+    last_seen_time = request.GET.get("last_message_time")
+    if last_seen_time:
+        last_seen_time = datetime.fromisoformat(last_seen_time)
+    else:
+        last_seen_time = now()
 
     timeout = 30
     start_time = now()
     while (now() - start_time).seconds < timeout:
-        # Récupère le dernier message envoyé ou modifié
-        latest_message = room.messages.order_by("-sent_at").first()
-        if latest_message and latest_message.sent_at > last_message_time:
-            last_message_times[room_id] = latest_message.sent_at
+        new_messages = room.messages.filter(sent_at__gt=last_seen_time).order_by("sent_at")
+        if new_messages.exists():
+            latest_message_time = new_messages.last().sent_at.isoformat()
 
-        # Vérifie si le dernier message est nouveau ou a été mis à jour
-        if latest_message and (
-                latest_message.sent_at > last_message_time or latest_message.updated_at > last_message_time):
-            # Met à jour le dernier temps enregistré
-            last_message_times[room_id] = max(latest_message.sent_at, latest_message.updated_at)
+            html_messages = []
+            for msg in new_messages:
+                html_messages.append(render_to_string('partials/message_line.html', {
+                    'message': msg,
+                    'today': today,
+                    'yesterday': yesterday,
+                }).strip())
 
-            # Prépare les messages pour l'affichage
-            room_messages = room.messages.order_by("sent_at", "id")
-            html_message = ""
-            for message in room_messages:
-                html_message += format_html(
-                    """
-                    <div class="mb-3 rounded" id="message-line" data-message-id="{id}">
-                        <p class="mb-1">
-                            <strong>{author}</strong>
-                            <span class="small fst-italic">
-                                {date}
-                            </span>
-                            <button type="button" title="Supprimer" id="delete-message" class="action-message px-1">
-                                <i class="bi bi-trash-fill"></i>
-                            </button>
-                            <button type="button" title="Modifier" id="edit-message" class="action-message px-1">
-                                <i class="bi bi-pencil-fill"></i>
-                            </button>
-                        </p>
-                        <p class="text-break">{content}</p>
-                    </div>
-                    """,
-                    id=message.id,
-                    author=message.author.username,
-                    date=format_message_date(message.sent_at),
-                    content=message.content.replace("\n", "<br>"),
-                )
-            return JsonResponse({'html_message': html_message})
+            return JsonResponse({
+                'html_message': ''.join(html_messages),
+                'latest_message_time': latest_message_time,
+            })
 
         sleep(1)
 
@@ -315,11 +288,7 @@ def delete_message(request, message_id):
     if message.author.id != request.session.get('user_id'):
         return JsonResponse({"error": "Unauthorized"}, status=403)
 
-    room_id = message.room.id
     message.delete()
-
-    # Met à jour le temps de dernière modification pour la salle
-    last_message_times[room_id] = now()
 
     return JsonResponse({"status": "ok"})
 

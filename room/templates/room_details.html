@@ -33,33 +33,8 @@
 
         <div class="row flex-grow-1 overflow-hidden">
             <div class="col-md-10 col-12 d-flex flex-column h-100">
-                <div class="overflow-auto flex-grow-1 p-3" id="messages-container" data-room-id="{{ room.id }}">
-                    {% for message in room_messages %}
-                        <div class="mb-3 rounded" id="message-line" data-message-id="{{ message.id }}">
-                            <p class="mb-1">
-                                <strong>{{ message.author.username }}</strong>
-                                <span class="small fst-italic">
-                                    {% if message.sent_at|date:'d/m/Y' == today|date:'d/m/Y' %}
-                                        Aujourd'hui à {{ message.sent_at|date:'H:i' }}
-                                    {% elif message.sent_at|date:'d/m/Y' == yesterday|date:'d/m/Y' %}
-                                        Hier à {{ message.sent_at|date:'H:i' }}
-                                    {% else %}
-                                        Le {{ message.sent_at|date:'d/m/Y' }} à {{ message.sent_at|date:'H:i' }}
-                                    {% endif %}
-                                </span>
-                                <button type="button" title="Supprimer" id="delete-message" class="action-message px-1">
-                                    <i class="bi bi-trash-fill"></i>
-                                </button>
-                                <button type="button" title="Modifier" id="edit-message" class="action-message px-1">
-                                    <i class="bi bi-pencil-fill"></i>
-                                </button>
-                            </p>
-                            <p class="text-break">{{ message.content|linebreaksbr|safe }}</p>
-                        </div>
-                    {% empty %}
-                        <p>Aucun message dans ce salon pour le moment. Soyez le premier à écrire !</p>
-                    {% endfor %}
-                </div>
+                <!-- Zone de messages -->
+                {% include 'partials/message_list.html' %}
 
                 <!-- Zone d'Input -->
                 <div class="d-flex align-items-center p-2 bg-light rounded">
@@ -77,6 +52,7 @@
                 </div>
             </div>
 
+            <!-- Zone d'utilisateurs -->
             <div id="desktop-users-column" class="col-2 d-none d-md-flex flex-column h-100 border-start">
                 <h5 class="p-2 border-bottom">Utilisateurs</h5>
                 <div class="overflow-auto flex-grow-1 p-2">

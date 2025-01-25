@@ -20,8 +20,8 @@ class Room(models.Model):
 class Message(models.Model):
     content = models.TextField()
     sent_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True, )
-    is_deleted =
+    updated_at = models.DateTimeField(auto_now=True, null=True)
+    is_deleted = models.BooleanField(default=False)
     room = models.ForeignKey(
         Room,
         on_delete=models.CASCADE,

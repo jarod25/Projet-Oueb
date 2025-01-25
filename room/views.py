@@ -70,28 +70,44 @@ def delete_room_view(request, room_id):
 @login_required
 def room_detail_view(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
-    room = get_object_or_404(Room, id=room_id)
-    user_status = UserStatus.objects.get(room=room, user=user)
-    if user_status.status == "banned":
-        messages.error(request, "Vous avez été banni de ce salon.")
-        return redirect("room_list") 
+
     if not Room.objects.filter(id=room_id, members=user).exists():
         return redirect("room_list")
+
+    room = get_object_or_404(Room, id=room_id)
+
+    user_status = UserStatus.objects.filter(user=user, room=room, status="banned").first()
+    if user_status:
+        messages.error(request, "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre.")
+        return redirect("room_list")
+
     rooms = Room.objects.filter(members=user)
-    rooms_with_owner = []
-    for owner_room in rooms:
-        owner_status = UserStatus.objects.filter(room=owner_room, status="owner").first()
-        owner = owner_status.user if owner_status else None
-        rooms_with_owner.append({"room": owner_room, "owner": owner})
+
+    rooms_with_owner = [
+        {
+            "room": r,
+            "owner": UserStatus.objects.filter(room=r, status="owner").first().user
+            if UserStatus.objects.filter(room=r, status="owner").exists()
+            else None
+        }
+        for r in rooms
+    ]
+
     room_users = UserStatus.objects.filter(room=room)
     room_messages = room.messages.order_by("sent_at", "id")
+
+    is_owner = UserStatus.objects.filter(room=room, user=user, status="owner").exists()
+    is_admin = UserStatus.objects.filter(room=room, user=user, status="administrator").exists()
+
     return render(request, "room_details.html", {
         "room": room,
         "room_messages": room_messages,
         "rooms": rooms_with_owner,
         "today": now(),
         "yesterday": now().date() - timedelta(days=1),
-        "room_users": room_users
+        "room_users": room_users,
+        "is_owner": is_owner,
+        "is_admin": is_admin,
     })
 
 

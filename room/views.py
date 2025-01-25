@@ -271,78 +271,99 @@ def invitation_popover_view(request):
 
 @login_required
 def user_role_popover(request, room_id):
+    current_user_status = get_object_or_404(UserStatus, user=request.session.get('user_id'), room_id=room_id)
+    target_user_status = get_object_or_404(UserStatus, user_id=request.GET.get('user_id'), room_id=room_id)
+    can_act = current_user_status.status in ['owner', 'administrator']
+    is_target_owner = target_user_status.status == 'owner'
     roles = UserStatus._meta.get_field('status').choices
-    return render(request, "partials/user_role_popover.html", {"roles": roles})
+    return render(request, "partials/user_role_popover.html",
+                  {"roles": roles, "can_act": can_act, "is_target_owner": is_target_owner})
 
 
 @login_required
 def update_user_role(request, room_id):
-    user = User.objects.get(id=request.session.get('user_id'))
+    if request.method != "POST":
+        return JsonResponse({"error": "Méthode non autorisée."}, status=405)
+
+    user = get_object_or_404(User, id=request.session.get('user_id'))
     room = get_object_or_404(Room, id=room_id)
-    user_status = UserStatus.objects.get(user=user, room=room)
+    user_status = get_object_or_404(UserStatus, user=user, room=room)
 
     if not room.members.filter(id=user.id).exists():
         return JsonResponse({"error": "Vous n'êtes pas membre de ce salon."}, status=401)
 
-    if not UserStatus.objects.filter(user=user, room=room, status="owner").exists():
-        return JsonResponse({"error": "Vous n'êtes pas autorisé à effectuer cette action."}, status=403)
+    if user_status.status not in ["owner", "administrator"]:
+        return JsonResponse({"error": "Vous n'avez pas les droits nécessaires pour effectuer cette action."},
+                            status=403)
 
-    if request.method == "POST":
-        new_status = request.POST.get("role")
-        user_to_update_id = request.POST.get("user_id")
-        user_to_update = get_object_or_404(User, id=user_to_update_id)
-        mute_duration = request.POST.get("mute_duration", None)
-        user_to_update_status = UserStatus.objects.get(user=user_to_update, room=room)
-        if not new_status:
-            return JsonResponse({"error": "Le nouveau statut n'est pas spécifié."}, status=400)
-        if new_status not in dict(UserStatus._meta.get_field('status').flatchoices):
-            return JsonResponse({"error": "Statut invalide."}, status=400)
-        if user_to_update_status.status == "owner":
-            return JsonResponse({"error": "Vous ne pouvez pas modifier le statut du propriétaire."}, status=403)
-        if user_status.status == "administrator" and user_to_update_status.status == "owner":
-            return JsonResponse({"error": "Vous n'êtes pas autorisé.e à effectuer cette action."}, status=403)
-        if new_status not in dict(UserStatus._meta.get_field('status').flatchoices).keys():
-            return JsonResponse({"error": "Statut invalide."}, status=400)
-        if request.POST.get("action") == "mute":
+    action = request.POST.get("action")
+    user_to_update_id = request.POST.get("user_id")
+    mute_duration = request.POST.get("mute_duration")
+
+    if not action or not user_to_update_id:
+        return JsonResponse({"error": "Données manquantes dans la requête."}, status=400)
+
+    user_to_update = get_object_or_404(User, id=user_to_update_id)
+    user_to_update_status = get_object_or_404(UserStatus, user=user_to_update, room=room)
+
+    if user_to_update_status.status == "owner":
+        return JsonResponse({"error": "Vous ne pouvez pas modifier le statut du propriétaire."}, status=403)
+
+    try:
+        if action == "mute":
+            if user_status.status != "administrator" or user_status.status != "owner":
+                return JsonResponse(
+                    {"error": "Seuls le propriétaire et les administrateurs peuvent bannir des utilisateurs."},
+                    status=403)
             if not mute_duration:
-                return JsonResponse({"error": "Veuillez indiquer la durée du mute."}, status=400)
-            UserStatus.objects.update_or_create(user=user_to_update, room=room, defaults={"status": new_status, "mute_end_time": now() + timedelta(minutes=int(mute_duration))})
+                return JsonResponse({"error": "Durée de mute manquante."}, status=400)
+            mute_end_time = now() + timedelta(minutes=int(mute_duration))
+            user_to_update_status.status = "muted"
+            user_to_update_status.mute_end_time = mute_end_time
+            user_to_update_status.save()
             return JsonResponse({"message": "Utilisateur réduit au silence avec succès."}, status=200)
-        elif request.POST.get("action") == "unmute":
-            if user_to_update_status.status == "muted":
-                UserStatus.objects.update_or_create(user=user_to_update, room=room, defaults={"status": "user", "mute_end_time": None})
-                return JsonResponse({"message": "Utilisateur rétabli avec succès."}, status=200)
-            return JsonResponse({"error": "L'utilisateur n'est pas muet."}, status=400)
-        elif request.POST.get("action") == "ban":
-            UserStatus.objects.update_or_create(user=user_to_update, room=room, defaults={"status": new_status})
+
+        elif action == "unmute":
+            if user_to_update_status.status != "muted":
+                return JsonResponse({"error": "L'utilisateur n'est pas actuellement réduit au silence."}, status=400)
+            user_to_update_status.status = "user"
+            user_to_update_status.mute_end_time = None
+            user_to_update_status.save()
+            return JsonResponse({"message": "Utilisateur rétabli avec succès."}, status=200)
+
+        elif action == "ban":
+            if user_status.status != "administrator" or user_status.status != "owner":
+                return JsonResponse(
+                    {"error": "Seuls le propriétaire et les administrateurs peuvent bannir des utilisateurs."},
+                    status=403)
+            user_to_update_status.status = "banned"
+            user_to_update_status.save()
+            room.members.remove(user_to_update)
             return JsonResponse({"message": "Utilisateur banni avec succès."}, status=200)
-        elif request.POST.get("action") == "unban":
-            if user_to_update_status.status == "banned":
-                UserStatus.objects.update_or_create(user=user_to_update, room=room, defaults={"status": "user"})
-                return JsonResponse({"message": "Utilisateur débanni avec succès."}, status=200)
-            return JsonResponse({"error": "L'utilisateur n'est pas banni."}, status=400)
-        elif request.POST.get("action") == "promote":
-            if user_status.status == "owner" or user_status.status == "administrator":
-                if user_to_update_status.status == "user":
-                    UserStatus.objects.update_or_create(user=user_to_update, room=room, defaults={"status": "administrator"})
-                    return JsonResponse({"message": "Utilisateur promu avec succès."}, status=200)
-                elif user_to_update_status.status == "administrator":
-                    return JsonResponse({"error": "L'utilisateur est déjà administrateur."}, status=400)
-                elif user_to_update_status.status == "banned" or user_to_update_status.status == "muted":
-                    return JsonResponse({"error": "L'utilisateur est banni ou muet."}, status=400)
-            return JsonResponse({"error": "Vous n'êtes pas autorisé.e à effectuer cette action."}, status=403)
-        elif request.POST.get("action") == "demote":
-            if user_status.status == "owner" or user_status.status == "administrator":
-                if user_to_update_status.status == "administrator":
-                    UserStatus.objects.update_or_create(user=user_to_update, room=room, defaults={"status": "user"})
-                    return JsonResponse({"message": "Utilisateur rétrogradé avec succès."}, status=200)
-                elif user_to_update_status.status == "user":
-                    return JsonResponse({"error": "L'utilisateur est déjà utilisateur."}, status=400)
-                elif user_to_update_status.status == "banned" or user_to_update_status.status == "muted":
-                    return JsonResponse({"error": "L'utilisateur est banni ou muet."}, status=400)
-            return JsonResponse({"error": "Vous n'êtes pas autorisé.e à effectuer cette action."}, status=403)
-        return JsonResponse({"error": "Action non reconnue."}, status=400)
-    return JsonResponse({"error": "Méthode non autorisée."}, status=405)
+
+        elif action == "promote":
+            if user_status.status != "owner":
+                return JsonResponse({"error": "Seul le propriétaire peut promouvoir des utilisateurs."}, status=403)
+            if user_to_update_status.status == "user":
+                user_to_update_status.status = "administrator"
+                user_to_update_status.save()
+                return JsonResponse({"message": "Utilisateur promu avec succès."}, status=200)
+            return JsonResponse({"error": "L'utilisateur ne peut pas être promu."}, status=400)
+
+        elif action == "demote":
+            if user_status.status != "owner":
+                return JsonResponse({"error": "Seul le propriétaire peut rétrograder des administrateurs."}, status=403)
+            if user_to_update_status.status == "administrator":
+                user_to_update_status.status = "user"
+                user_to_update_status.save()
+                return JsonResponse({"message": "Utilisateur rétrogradé avec succès."}, status=200)
+            return JsonResponse({"error": "L'utilisateur ne peut pas être rétrogradé."}, status=400)
+
+        else:
+            return JsonResponse({"error": "Action non reconnue."}, status=400)
+
+    except Exception as e:
+        return JsonResponse({"error": f"Une erreur est survenue : {str(e)}"}, status=500)
 
 
 @login_required

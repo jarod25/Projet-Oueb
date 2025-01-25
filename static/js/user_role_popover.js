@@ -1,5 +1,4 @@
 $(document).ready(function () {
-
     function toggleUserButton() {
         if ($(window).width() < 768) {
             $('#mobile-users-button').show();
@@ -44,12 +43,27 @@ $(document).ready(function () {
         }
     }
 
+    function transformRole(role) {
+        switch (role) {
+            case 'owner':
+                return 'Propriétaire';
+            case 'administrator':
+                return 'Administrateur';
+            case 'user':
+                return 'Utilisateur';
+            case 'muted':
+                return 'Muet';
+            default:
+                return 'Inconnu';
+        }
+    }
+
     $('.open-user-popover').on('click', function (e) {
         e.preventDefault();
         const $trigger = $(this);
         const userId = $trigger.data('id');
         const username = $trigger.data('username');
-        const role = $trigger.data('role');
+        let role = $trigger.data('role');
         const $userItem = $trigger.find('#user-btn');
         closeAllPopovers();
         $userItem.addClass('active');
@@ -57,29 +71,42 @@ $(document).ready(function () {
         $.ajax({
             url: 'user_role_popover',
             method: 'GET',
+            data: {user_id: userId},
             success: function (response) {
                 const $popover = $(response).addClass('popover shadow p-3');
                 $('body').append($popover);
                 adjustPopover($trigger);
                 $popover.find('#popover-username').text(username);
-                $popover.find('#popover-role').val(role);
+                role = transformRole(role);
+                $popover.find('#popover-role-display').text(role);
+
+                const canAct = $popover.data('can-act');
+                const isTargetOwner = $popover.data('is-target-owner');
+
+                if (!canAct || isTargetOwner) {
+                    $popover.find('#popover-action, #savePopoverRole, #mute-duration-container').parent().remove();
+                }
+
                 $popover.find('#savePopoverRole').on('click', function () {
-                    const newRole = $popover.find('#popover-role').val();
+                    const action = $popover.find('#popover-action').val();
+                    const muteDuration = $popover.find('#popover-mute-duration').val();
+
                     $.ajax({
                         url: 'update_user_role/',
                         method: 'POST',
                         data: {
                             user_id: userId,
-                            role: newRole,
+                            action: action,
+                            mute_duration: muteDuration,
                             csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
                         },
                         success: function () {
-                            alert('Rôle mis à jour avec succès.');
+                            alert('Action effectuée avec succès.');
                             closeAllPopovers();
                             location.reload();
                         },
-                        error: function () {
-                            alert('Erreur lors de la mise à jour.');
+                        error: function (xhr) {
+                            alert('Erreur lors de l\'exécution de l\'action : ' + (xhr.responseJSON?.error || ''));
                         }
                     });
                 });
@@ -93,6 +120,15 @@ $(document).ready(function () {
     $(document).on('click', function (e) {
         if (!$(e.target).closest('.popover, .open-user-popover').length) {
             closeAllPopovers();
+        }
+    });
+
+    $(document).on('change', '#popover-action', function () {
+        const action = $(this).val();
+        if (action === 'mute') {
+            $('#mute-duration-container').show();
+        } else {
+            $('#mute-duration-container').hide();
         }
     });
 });

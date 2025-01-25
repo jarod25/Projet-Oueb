@@ -20,6 +20,10 @@ def login_view(request):
             user = form.login(request)
             if user is not None:
                 return redirect('room_list')
+            else:
+                return render(request, 'login.html', {'form': form})
+        else:
+            return render(request, 'login.html', {'form': form})
     return render(request, 'login.html', {'form': form})
 
 
@@ -34,6 +38,8 @@ def register_view(request):
             user = form.save()
             messages.success(request, f'Compte créé pour {user.username}, vous pouvez vous connecter.')
             return redirect('login')
+        else:
+            return render(request, 'register.html', {'form': form})
     else:
         return render(request, 'register.html', {'form': form})
 
@@ -60,11 +66,15 @@ def profile_view(request):
                 user_form.save()
                 messages.success(request, 'Profil mis à jour avec succès.')
                 return redirect('profile')
+            else:
+                return render(request, 'profile.html', {'user_form': user_form, 'pwd_form': pwd_form})
         elif 'pwd_form_submit' in request.POST:
             pwd_form = forms.PasswordForm(user=user_instance, data=request.POST)
             if pwd_form.is_valid():
                 pwd_form.save()
                 messages.success(request, 'Mot de passe mis à jour avec succès. Veuillez vous reconnecter.')
                 return redirect('login')
+            else:
+                return render(request, 'profile.html', {'user_form': user_form, 'pwd_form': pwd_form})
 
     return render(request, 'profile.html', {'user_form': user_form, 'pwd_form': pwd_form})

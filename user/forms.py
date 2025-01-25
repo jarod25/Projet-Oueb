@@ -43,7 +43,6 @@ class RegisterForm(forms.Form):
         max_length=255,
         label='Adresse email ',
         widget=forms.TextInput(attrs={'class': 'form-control rounded-3'}),
-        validators=[EmailValidator()]
     )
     username = forms.CharField(
         max_length=255,

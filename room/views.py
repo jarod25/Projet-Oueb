@@ -208,6 +208,7 @@ def send_message(request, room_id):
 @login_required
 def search_users(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
+    room = get_object_or_404(Room, id=room_id)
     user_status = get_object_or_404(UserStatus, user=user, room=room)
     if user_status.status == "banned":
         return JsonResponse({"error": "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre."}, status=403)

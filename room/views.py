@@ -1,15 +1,11 @@
-from dateutil.utils import today
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from user.models import User
 from django.http import JsonResponse
-from django.contrib import messages
-from django.utils.html import format_html
-from django.core.cache import cache
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Room, Invitation, UserStatus, Message
 from user import login_required
-from django.utils.timezone import now
+from django.utils.timezone import now, make_aware, is_naive
 from datetime import date, timedelta, datetime
 from django.contrib import messages
 from time import sleep
@@ -114,26 +110,37 @@ def get_messages(request, room_id):
     last_seen_time = request.GET.get("last_message_time")
     if last_seen_time:
         last_seen_time = datetime.fromisoformat(last_seen_time)
+        if is_naive(last_seen_time):
+            last_seen_time = make_aware(last_seen_time)
     else:
         last_seen_time = now()
 
     timeout = 30
     start_time = now()
     while (now() - start_time).seconds < timeout:
-        new_messages = room.messages.filter(sent_at__gt=last_seen_time).order_by("sent_at")
-        if new_messages.exists():
-            latest_message_time = new_messages.last().sent_at.isoformat()
+        new_messages = room.messages.filter(
+            updated_at__gt=last_seen_time
+        ).order_by("sent_at")
 
-            html_messages = []
+        if new_messages.exists():
+            latest_message_time = new_messages.last().updated_at.isoformat()
+
+            messages_data = []
             for msg in new_messages:
-                html_messages.append(render_to_string('partials/message_line.html', {
+                html_message = render_to_string('partials/message_line.html', {
                     'message': msg,
                     'today': today,
                     'yesterday': yesterday,
-                }).strip())
+                }).strip()
+
+                messages_data.append({
+                    'id': msg.id,
+                    'html': html_message,
+                    'is_deleted': msg.is_deleted,
+                })
 
             return JsonResponse({
-                'html_message': ''.join(html_messages),
+                'messages': messages_data,
                 'latest_message_time': latest_message_time,
             })
 
@@ -288,7 +295,9 @@ def delete_message(request, message_id):
     if message.author.id != request.session.get('user_id'):
         return JsonResponse({"error": "Unauthorized"}, status=403)
 
-    message.delete()
+    message.is_deleted = True
+    message.updated_at = now()
+    message.save()
 
     return JsonResponse({"status": "ok"})
 
@@ -307,6 +316,7 @@ def edit_message(request, message_id):
         return JsonResponse({"error": "Message content cannot be empty."}, status=400)
 
     message.content = new_content
+    message.updated_at = now()
     message.save()
 
     return JsonResponse({"content": message.content})

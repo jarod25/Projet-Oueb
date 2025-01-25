@@ -15,7 +15,6 @@ $(document).on("click", "#delete-message", function (e) {
             },
             success: function () {
                 messageLine.remove();
-                getMessages();
             },
             error: function () {
                 alert("Une erreur s'est produite lors de la suppression du message.");

@@ -44,7 +44,6 @@ $(document).on("click", ".save-edit-button", function (e) {
         success: function (response) {
             state.isEditing = false;
             messageLine.find(".text-break").text(response.content);
-            getMessages()
         },
         error: function () {
             alert("Erreur lors de la modification du message.");

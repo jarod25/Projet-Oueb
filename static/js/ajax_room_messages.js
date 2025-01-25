@@ -1,6 +1,6 @@
 const messagesContainer = $("#messages-container");
 const roomId = messagesContainer.data("room-id");
-export const state = { isEditing: false };
+export const state = {isEditing: false};
 
 function scrollToBottom() {
     messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
@@ -17,9 +17,23 @@ export function getMessages() {
             url: `/room/${roomId}/get_messages/${params}`,
             method: 'GET',
             success: function (data) {
-                if (data.html_message) {
-                    let parsed_html = data.html_message.replace(/&lt;br&gt;/g, '<br>');
-                    messagesContainer.append(parsed_html);
+                if (data.messages) {
+                    data.messages.forEach(message => {
+                        const existingMessage = $(`#message-line[data-message-id="${message.id}"]`);
+
+                        if (message.is_deleted) {
+                            if (existingMessage.length) {
+                                existingMessage.remove();
+                            }
+                        } else {
+                            let parsed_html = message.html.replace(/&lt;br&gt;/g, '<br>');
+                            if (existingMessage.length) {
+                                existingMessage.replaceWith(parsed_html);
+                            } else {
+                                messagesContainer.append(parsed_html);
+                            }
+                        }
+                    });
                     scrollToBottom();
                     lastMessageTime = data.latest_message_time;
                 }

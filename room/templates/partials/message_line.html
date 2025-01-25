@@ -1,0 +1,25 @@
+<div class="mb-3 rounded" id="message-line" data-message-id="{{ message.id }}">
+    <p class="mb-1">
+        <strong>{{ message.author.username }}</strong>
+        <span class="small fst-italic">
+            {% if message.sent_at|date:'d/m/Y' == today|date:'d/m/Y' %}
+                Aujourd'hui à {{ message.sent_at|date:'H:i' }}
+            {% elif message.sent_at|date:'d/m/Y' == yesterday|date:'d/m/Y' %}
+                Hier à {{ message.sent_at|date:'H:i' }}
+            {% else %}
+                Le {{ message.sent_at|date:'d/m/Y' }} à {{ message.sent_at|date:'H:i' }}
+            {% endif %}
+        </span>
+        {% if current_user == message.author or is_owner or is_admin %}
+            <button type="button" title="Supprimer" id="delete-message" class="action-message px-1">
+                <i class="bi bi-trash-fill"></i>
+            </button>
+        {% endif %}
+        {% if current_user == message.author %}
+            <button type="button" title="Modifier" id="edit-message" class="action-message px-1">
+                <i class="bi bi-pencil-fill"></i>
+            </button>
+        {% endif %}
+    </p>
+    <p class="text-break">{{ message.content|linebreaksbr|safe }}</p>
+</div>

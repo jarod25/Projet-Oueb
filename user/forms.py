@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib.auth.hashers import check_password, make_password
+from django.core.validators import EmailValidator
+
 from .models import User
 
 
@@ -7,12 +9,12 @@ class LoginForm(forms.Form):
     userlogin = forms.CharField(
         max_length=255,
         label='Nom d’utilisateur ou email ',
-        widget=forms.TextInput(attrs={'class': 'form-control rounded-3'})
+        widget=forms.TextInput(attrs={'class': 'form-control rounded-3'}),
     )
     password = forms.CharField(
         max_length=255,
         label='Mot de passe ',
-        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'})
+        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'}),
     )
 
     def login(self, request):
@@ -40,22 +42,31 @@ class RegisterForm(forms.Form):
     mail = forms.EmailField(
         max_length=255,
         label='Adresse email ',
-        widget=forms.TextInput(attrs={'class': 'form-control rounded-3'})
+        widget=forms.TextInput(attrs={'class': 'form-control rounded-3'}),
+        validators=[EmailValidator()]
     )
     username = forms.CharField(
         max_length=255,
+        min_length=5,  
         label='Nom d’utilisateur ',
-        widget=forms.TextInput(attrs={'class': 'form-control rounded-3'})
+        widget=forms.TextInput(attrs={'class': 'form-control rounded-3'}),
+        error_messages={
+            'min_length': 'Le nom d’utilisateur doit contenir au moins 5 caractères.'
+        },
     )
     password = forms.CharField(
         max_length=255,
+        min_length=8,  
         label='Mot de passe ',
-        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'})
+        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'}),
+        error_messages={
+            'min_length': 'Le mot de passe doit contenir au moins 8 caractères.'
+        },
     )
     password_confirm = forms.CharField(
         max_length=255,
         label='Confirmer le mot de passe ',
-        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'})
+        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'}),
     )
 
     def clean(self):
@@ -90,12 +101,16 @@ class ProfileForm(forms.ModelForm):
     mail = forms.EmailField(
         max_length=255,
         label='Adresse email ',
-        widget=forms.TextInput(attrs={'class': 'form-control rounded-3'})
+        widget=forms.TextInput(attrs={'class': 'form-control rounded-3'}),
     )
     username = forms.CharField(
         max_length=127,
+        min_length=5,  
         label='Nom d’utilisateur ',
-        widget=forms.TextInput(attrs={'class': 'form-control rounded-3'})
+        widget=forms.TextInput(attrs={'class': 'form-control rounded-3'}),
+        error_messages={
+            'min_length': 'Le nom d’utilisateur doit contenir au moins 5 caractères.'
+        },
     )
 
     class Meta:
@@ -128,17 +143,21 @@ class PasswordForm(forms.Form):
     current_password = forms.CharField(
         max_length=255,
         label='Ancien mot de passe ',
-        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'})
+        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'}),
     )
     password = forms.CharField(
         max_length=255,
+        min_length=8,  
         label='Nouveau mot de passe ',
-        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'})
+        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'}),
+        error_messages={
+            'min_length': 'Le mot de passe doit contenir au moins 8 caractères.'
+        },
     )
     password_confirm = forms.CharField(
         max_length=255,
         label='Confirmer le mot de passe ',
-        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'})
+        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'}),
     )
 
     def __init__(self, user, *args, **kwargs):

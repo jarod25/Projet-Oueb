@@ -15,4 +15,7 @@ urlpatterns = [
     path('invitation_popover/', views.invitation_popover_view, name='invitation_popover'),
     path('<int:room_id>/user_role_popover/', views.user_role_popover, name='user_role_popover'),
     path('<int:room_id>/update_user_role/', views.update_user_role, name='update_user_role'),
+    path('<int:message_id>/delete-message/', views.delete_message, name="delete-message"),
+    path('<int:message_id>/edit-message/', views.edit_message, name='edit_message'),
+
 ]

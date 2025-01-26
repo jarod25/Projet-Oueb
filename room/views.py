@@ -1,12 +1,13 @@
+from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from user.models import User
 from django.http import JsonResponse
-from django.utils.html import format_html
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Room, Invitation, UserStatus, Message
 from user import login_required
-from django.utils.timezone import now
-from datetime import date, timedelta
+from django.utils.timezone import now, make_aware, is_naive
+from datetime import date, timedelta, datetime
+from django.contrib import messages
 from time import sleep
 
 
@@ -15,10 +16,14 @@ def room_list_view(request):
     user_id = request.session.get('user_id')
     user = User.objects.get(id=user_id)
 
-    # Filtrer les salons où l'utilisateur est membre
     rooms = Room.objects.filter(members=user)
+    rooms_with_owner = []
+    for room in rooms:
+        owner_status = UserStatus.objects.filter(room=room, status="owner").first()
+        owner = owner_status.user if owner_status else None
+        rooms_with_owner.append({"room": room, "owner": owner})
 
-    return render(request, "room_list.html", {"rooms": rooms})
+    return render(request, "room_list.html", {"rooms": rooms_with_owner})
 
 
 @login_required
@@ -55,6 +60,11 @@ def create_room_view(request):
 
 @login_required
 def delete_room_view(request, room_id):
+    user = User.objects.get(id=request.session.get('user_id'))
+    user_status = UserStatus.objects.filter(user=user, room=room_id, status="owner")
+    if not user_status:
+        messages.error(request, "Vous n'êtes pas autorisé à effectuer cette action.")
+        return redirect("room_list")
     room = get_object_or_404(Room, id=room_id)
     room.delete()
     return redirect("room_list")
@@ -63,33 +73,45 @@ def delete_room_view(request, room_id):
 @login_required
 def room_detail_view(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
+
     if not Room.objects.filter(id=room_id, members=user).exists():
         return redirect("room_list")
+
     room = get_object_or_404(Room, id=room_id)
+
+    user_status = UserStatus.objects.filter(user=user, room=room, status="banned").first()
+    if user_status:
+        messages.error(request, "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre.")
+        return redirect("room_list")
+
     rooms = Room.objects.filter(members=user)
+
+    rooms_with_owner = [
+        {
+            "room": r,
+            "owner": UserStatus.objects.filter(room=r, status="owner").first().user
+            if UserStatus.objects.filter(room=r, status="owner").exists()
+            else None
+        }
+        for r in rooms
+    ]
+
     room_users = UserStatus.objects.filter(room=room)
     room_messages = room.messages.order_by("sent_at", "id")
+
+    is_owner = UserStatus.objects.filter(room=room, user=user, status="owner").exists()
+    is_admin = UserStatus.objects.filter(room=room, user=user, status="administrator").exists()
+
     return render(request, "room_details.html", {
         "room": room,
         "room_messages": room_messages,
-        "rooms": rooms,
+        "rooms": rooms_with_owner,
         "today": now(),
         "yesterday": now().date() - timedelta(days=1),
-        "room_users": room_users
+        "room_users": room_users,
+        "is_owner": is_owner,
+        "is_admin": is_admin,
     })
-
-
-def format_message_date(sent_at):
-    today = date.today()
-    yesterday = today - timedelta(days=1)
-
-    if sent_at.date() == today:
-        return format_html('<span class="message-date text-muted">Aujourd\'hui à {}</span>', sent_at.strftime('%H:%M'))
-    elif sent_at.date() == yesterday:
-        return format_html('<span class="message-date text-muted">Hier à {}</span>', sent_at.strftime('%H:%M'))
-    else:
-        return format_html('<span class="message-date text-muted">Le {} à {}</span>', sent_at.strftime('%d/%m/%Y'),
-                           sent_at.strftime('%H:%M'))
 
 
 last_message_times = {}
@@ -97,48 +119,57 @@ last_message_times = {}
 
 @login_required
 def get_messages(request, room_id):
-    user = request.session.get('user_id')
+    user_id = request.session.get('user_id')
+    user = User.objects.get(id=user_id)
     room = get_object_or_404(Room, id=room_id)
+    today = date.today()
+    yesterday = today - timedelta(days=1)
 
-    if not room.members.filter(id=user).exists():
+    is_owner = UserStatus.objects.filter(room=room, user=user_id, status="owner").exists()
+    is_admin = UserStatus.objects.filter(room=room, user=user_id, status="administrator").exists()
+
+    if not room.members.filter(id=user_id).exists():
         return JsonResponse({"error": "Unauthorized"}, status=403)
 
-    last_message_time = last_message_times.get(room_id, now())
+    last_seen_time = request.GET.get("last_message_time")
+    if last_seen_time:
+        last_seen_time = datetime.fromisoformat(last_seen_time)
+        if is_naive(last_seen_time):
+            last_seen_time = make_aware(last_seen_time)
+    else:
+        last_seen_time = now()
 
     timeout = 30
     start_time = now()
     while (now() - start_time).seconds < timeout:
-        latest_message = room.messages.order_by("-sent_at").first()
-        if latest_message and latest_message.sent_at > last_message_time:
-            last_message_times[room_id] = latest_message.sent_at
+        new_messages = room.messages.filter(
+            updated_at__gt=last_seen_time
+        ).order_by("sent_at")
 
-            room_messages = room.messages.order_by("sent_at", "id")
-            html_message = ""
-            for message in room_messages:
-                html_message += format_html(
-                    """
-                    <div class="mb-3 rounded" id="message-line" data-message-id="{id}">
-                        <p class="mb-1">
-                            <strong>{author}</strong>
-                            <span class="small fst-italic">
-                                {date}
-                            </span>
-                            <button type="button" title="Supprimer" id="delete-message" class="action-message px-1">
-                                <i class="bi bi-trash-fill"></i>
-                            </button>
-                            <button type="button" title="Modifier" id="edit-message" class="action-message px-1">
-                                <i class="bi bi-pencil-fill"></i>
-                            </button>
-                        </p>
-                        <p class="text-break">{content}</p>
-                    </div>
-                    """,
-                    id=message.id,
-                    author=message.author.username,
-                    date=format_message_date(message.sent_at),
-                    content=message.content.replace("\n", "<br>"),
-                )
-            return JsonResponse({'html_message': html_message})
+        if new_messages.exists():
+            latest_message_time = new_messages.last().updated_at.isoformat()
+
+            messages_data = []
+            for msg in new_messages:
+                html_message = render_to_string('partials/message_line.html', {
+                    'message': msg,
+                    'today': today,
+                    'yesterday': yesterday,
+                    "is_owner": is_owner,
+                    "is_admin": is_admin,
+                    "current_user": user,
+                }).strip()
+
+                messages_data.append({
+                    'id': msg.id,
+                    'html': html_message,
+                    'is_deleted': msg.is_deleted,
+                })
+
+            return JsonResponse({
+                'messages': messages_data,
+                'latest_message_time': latest_message_time,
+            })
 
         sleep(1)
 
@@ -269,12 +300,63 @@ def update_user_role(request, room_id):
 
     return JsonResponse({"error": "Méthode non autorisée."}, status=405)
 
+
 @login_required
 def leave_room_view(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
     room = get_object_or_404(Room, id=room_id)
-    if room.members.filter(id=user.id).exists() and UserStatus.objects.filter(user=user, room=room).exists() and UserStatus.objects.get(user=user, room=room).status != "owner":
+    if (
+            room.members.filter(id=user.id).exists()
+            and UserStatus.objects.filter(user=user, room=room).exists()
+            and UserStatus.objects.get(user=user, room=room).status != "owner"
+    ):
         room.members.remove(user)
         UserStatus.objects.get(user=user, room=room).delete()
         return redirect("room_list")
     return redirect("room_list")
+
+
+@login_required
+def delete_message(request, message_id):
+    message = get_object_or_404(Message, id=message_id)
+    room = message.room
+    current_user = get_object_or_404(User, id=request.session.get('user_id'))
+
+    owner = UserStatus.objects.filter(room=room, status="owner").first()
+    admins = UserStatus.objects.filter(room=room, status="administrator").values_list('user', flat=True)
+
+    is_owner = owner and owner.user == current_user
+    is_admin = current_user.id in admins
+    is_author = message.author == current_user
+
+    if not (is_owner or is_admin or is_author):
+        return JsonResponse({"error": "Unauthorized"}, status=403)
+
+    message.is_deleted = True
+    message.updated_at = now()
+    message.save()
+
+    sleep(1)
+    message.delete()
+
+    return JsonResponse({"status": "ok"})
+
+
+@login_required
+def edit_message(request, message_id):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid method."}, status=405)
+
+    message = get_object_or_404(Message, id=message_id)
+    if message.author.id != request.session.get('user_id'):
+        return JsonResponse({"error": "Unauthorized"}, status=403)
+
+    new_content = request.POST.get("content", "").strip()
+    if not new_content:
+        return JsonResponse({"error": "Message content cannot be empty."}, status=400)
+
+    message.content = new_content
+    message.updated_at = now()
+    message.save()
+
+    return JsonResponse({"content": message.content})

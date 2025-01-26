@@ -3,6 +3,25 @@ $(document).ready(function () {
         $('.popover').remove();
     }
 
+    function adjustPopover($trigger) {
+        const $popover = $('.popover');
+        if ($(window).width() < 768) {
+            $popover.css({
+                position: 'absolute',
+                top: $trigger.offset().top + 50,
+                left: $trigger.offset().left,
+                zIndex: 1046
+            });
+        } else {
+            $popover.css({
+                position: 'absolute',
+                top: $trigger.offset().top,
+                left: $trigger.offset().left + $trigger.outerWidth() + 50,
+                zIndex: 1000
+            });
+        }
+    }
+
     $('#invitationPopover').on('click', function (e) {
         e.preventDefault();
         const $trigger = $(this);
@@ -14,16 +33,9 @@ $(document).ready(function () {
             url: '/room/invitation_popover/',
             method: 'GET',
             success: function (response) {
-                const $popover = $(response)
-                    .addClass('popover shadow p-3')
-                    .css({
-                        position: 'absolute',
-                        top: $trigger.offset().top,
-                        left: $trigger.offset().left + $trigger.outerWidth() + 50,
-                        zIndex: 1000,
-                    });
-
+                const $popover = $(response).addClass('popover shadow p-3');
                 $('body').append($popover);
+                adjustPopover($trigger);
                 let form = $popover.find('#manage-invitation-form');
                 form.on('submit', function (e) {
                     e.preventDefault();

@@ -29,19 +29,19 @@
                     </div>
                 </div>
 
-                <ul class="list-unstyled mt-3 overflow-scroll room-list">
+                <ul class="list-unstyled overflow-auto room-list">
                     {% for room in rooms %}
                         <li class="room-item d-flex align-items-center justify-content-between p-2">
-                            <a href="{% url 'room_detail' room.id %}" class="room-link text-truncate w-75">
-                                {{ room.name }}
+                            <a href="{% url 'room_detail' room.room.id %}" class="room-link text-truncate w-75">
+                                {{ room.room.name }}
                             </a>
-                            {% if current_user == room.members.first %}
-                                <a href="{% url 'delete_room' room.id %}" class="room-icon ms-2"
+                            {% if current_user == room.owner %}
+                                <a href="{% url 'delete_room' room.room.id %}" class="room-icon ms-2"
                                    onclick="return confirm('Êtes vous sur de vouloir supprimer le salon ?')">
                                     <i class="bi bi-trash-fill"></i>
                                 </a>
                             {% else %}
-                                <a href="{% url 'leave_room' room.id %}" class="room-icon ms-2"
+                                <a href="{% url 'leave_room' room.room.id %}" class="room-icon ms-2"
                                    onclick="return confirm('Êtes vous sur de vouloir quitter le salon ?')">
                                     <i class="bi bi-box-arrow-left"></i>
                                 </a>

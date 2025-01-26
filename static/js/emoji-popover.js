@@ -107,11 +107,11 @@ $(document).ready(function () {
         textarea.focus();
     }
 
-    // Toggle popover visibility
     emojiButton.addEventListener('click', (e) => {
         e.stopPropagation();
         const rect = emojiButton.getBoundingClientRect();
-        emojiPopover.style.top = `${rect.bottom + window.scrollY}px`;
+        const popoverHeight = emojiPopover.offsetHeight || 300;
+        emojiPopover.style.top = `${rect.top + window.scrollY - popoverHeight}px`; // Position au-dessus
         emojiPopover.style.left = `${rect.left + window.scrollX}px`;
         emojiPopover.style.display = emojiPopover.style.display === 'none' ? 'block' : 'none';
     });

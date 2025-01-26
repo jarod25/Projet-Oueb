@@ -14,6 +14,9 @@ $(document).on("click", "#edit-message", function (e) {
         <textarea class="edit-textarea form-control mb-2">${messageContent}</textarea>
         <button class="save-edit-button btn btn-sm btn-primary">Enregistrer</button>
         <button class="cancel-edit-button btn btn-sm btn-secondary">Annuler</button>
+        <button class="btn emoji-btn p-0 me-2">
+            <i class="bi bi-emoji-smile-fill"></i>
+        </button>
     `);
 });
 

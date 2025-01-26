@@ -16,12 +16,13 @@ def room_list_view(request):
     user_id = request.session.get('user_id')
     user = User.objects.get(id=user_id)
 
-    rooms = Room.objects.filter(members=user)
+    rooms = UserStatus.objects.filter(user=user).values_list("room", flat=True)
     rooms_with_owner = []
-    for room in rooms:
-        owner_status = UserStatus.objects.filter(room=room, status="owner").first()
+    for room_id in rooms:
+        room_owner = Room.objects.get(id=room_id)
+        owner_status = UserStatus.objects.filter(room=room_owner, status="owner").first()
         owner = owner_status.user if owner_status else None
-        rooms_with_owner.append({"room": room, "owner": owner})
+        rooms_with_owner.append({"room": room_owner, "owner": owner})
 
     return render(request, "room_list.html", {"rooms": rooms_with_owner})
 
@@ -74,28 +75,23 @@ def delete_room_view(request, room_id):
 @login_required
 def room_detail_view(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
+    room = get_object_or_404(Room, id=room_id)
+
+    user_status = get_object_or_404(UserStatus, user=user, room=room)
+    if user_status.status == "banned":
+        messages.error(request, "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre.")
+        return redirect("room_list")
 
     if not Room.objects.filter(id=room_id, members=user).exists():
         return redirect("room_list")
 
-    room = get_object_or_404(Room, id=room_id)
-
-    user_status = UserStatus.objects.filter(user=user, room=room, status="banned").first()
-    if user_status:
-        messages.error(request, "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre.")
-        return redirect("room_list")
-
-    rooms = Room.objects.filter(members=user)
-
-    rooms_with_owner = [
-        {
-            "room": r,
-            "owner": UserStatus.objects.filter(room=r, status="owner").first().user
-            if UserStatus.objects.filter(room=r, status="owner").exists()
-            else None
-        }
-        for r in rooms
-    ]
+    rooms = UserStatus.objects.filter(user=user).values_list("room", flat=True)
+    rooms_with_owner = []
+    for room_id in rooms:
+        room_owner = Room.objects.get(id=room_id)
+        owner_status = UserStatus.objects.filter(room=room_owner, status="owner").first()
+        owner = owner_status.user if owner_status else None
+        rooms_with_owner.append({"room": room_owner, "owner": owner})
 
     room_users = UserStatus.objects.filter(room=room)
     room_messages = room.messages.order_by("sent_at", "id")
@@ -127,7 +123,8 @@ def get_messages(request, room_id):
     yesterday = today - timedelta(days=1)
     user_status = get_object_or_404(UserStatus, user=user, room=room)
     if user_status.status == "banned":
-        return JsonResponse({"error": "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre."}, status=403)
+        return JsonResponse({"error": "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre."},
+                            status=403)
     is_owner = UserStatus.objects.filter(room=room, user=user_id, status="owner").exists()
     is_admin = UserStatus.objects.filter(room=room, user=user_id, status="administrator").exists()
 
@@ -188,9 +185,12 @@ def send_message(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     user_status = get_object_or_404(UserStatus, user=user, room=room)
     if user_status.status == "banned":
-        return JsonResponse({"error": "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre."}, status=403)
+        return JsonResponse({"error": "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre."},
+                            status=403)
     if user_status.status == "muted":
-        return JsonResponse({"error": "Vous avez été réduit au silence dans ce salon. Vous ne pouvez donc pas envoyer de message."}, status=403)
+        return JsonResponse(
+            {"error": "Vous avez été réduit au silence dans ce salon. Vous ne pouvez donc pas envoyer de message."},
+            status=403)
     if not room.members.filter(id=user.id).exists():
         return JsonResponse({"error": "Vous n'êtes pas membre de ce salon."}, status=401)
 
@@ -211,9 +211,12 @@ def search_users(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     user_status = get_object_or_404(UserStatus, user=user, room=room)
     if user_status.status == "banned":
-        return JsonResponse({"error": "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre."}, status=403)
+        return JsonResponse({"error": "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre."},
+                            status=403)
     if user_status.status == "muted":
-        return JsonResponse({"error": "Vous avez été réduit au silence dans ce salon. Vous ne pouvez donc pas envoyer de message."}, status=403)
+        return JsonResponse(
+            {"error": "Vous avez été réduit au silence dans ce salon. Vous ne pouvez donc pas envoyer de message."},
+            status=403)
     query = request.GET.get('q', '')
     if query:
         users = User.objects.exclude(id=user.id).exclude(rooms=room_id).filter(username__icontains=query)
@@ -228,9 +231,12 @@ def invite_user_view(request, room_id):
     room = get_object_or_404(Room, id=room_id)
     user_status = get_object_or_404(UserStatus, user=user, room=room)
     if user_status.status == "banned":
-        return JsonResponse({"error": "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre."}, status=403)
+        return JsonResponse({"error": "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre."},
+                            status=403)
     if user_status.status == "muted":
-        return JsonResponse({"error": "Vous avez été réduit au silence dans ce salon. Vous ne pouvez donc pas envoyer de message."}, status=403)
+        return JsonResponse(
+            {"error": "Vous avez été réduit au silence dans ce salon. Vous ne pouvez donc pas envoyer de message."},
+            status=403)
     if request.method == "GET":
         invited_users = Invitation.objects.filter(room=room, status__in=['pending', 'accepted']).values_list('receiver',
                                                                                                              flat=True)
@@ -290,9 +296,8 @@ def user_role_popover(request, room_id):
     current_user_status = get_object_or_404(UserStatus, user=request.session.get('user_id'), room_id=room_id)
     target_user_status = get_object_or_404(UserStatus, user_id=request.GET.get('user_id'), room_id=room_id)
     if current_user_status.status == "banned":
-        return JsonResponse({"error": "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre."}, status=403)
-    if current_user_status.status == "muted":
-        return JsonResponse({"error": "Vous avez été réduit au silence dans ce salon. Vous ne pouvez donc pas envoyer de message."}, status=403)
+        return JsonResponse({"error": "Vous avez été banni de ce salon. Vous ne pouvez donc pas le rejoindre."},
+                            status=403)
     can_act = current_user_status.status in ['owner', 'administrator']
     is_target_owner = target_user_status.status == 'owner'
     roles = UserStatus._meta.get_field('status').choices
@@ -331,7 +336,7 @@ def update_user_role(request, room_id):
 
     try:
         if action == "mute":
-            if user_status.status != "administrator" or user_status.status != "owner":
+            if user_status.status != "administrator" and user_status.status != "owner":
                 return JsonResponse(
                     {"error": "Seuls le propriétaire et les administrateurs peuvent bannir des utilisateurs."},
                     status=403)
@@ -352,7 +357,7 @@ def update_user_role(request, room_id):
             return JsonResponse({"message": "Utilisateur rétabli avec succès."}, status=200)
 
         elif action == "ban":
-            if user_status.status != "administrator" or user_status.status != "owner":
+            if user_status.status != "administrator" and user_status.status != "owner":
                 return JsonResponse(
                     {"error": "Seuls le propriétaire et les administrateurs peuvent bannir des utilisateurs."},
                     status=403)
@@ -397,6 +402,7 @@ def leave_room_view(request, room_id):
     ):
         room.members.remove(user)
         UserStatus.objects.get(user=user, room=room).delete()
+        Invitation.objects.filter(room=room, receiver=user).delete()
         return redirect("room_list")
     return redirect("room_list")
 

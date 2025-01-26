@@ -127,8 +127,10 @@ $(document).ready(function () {
         const action = $(this).val();
         if (action === 'mute') {
             $('#mute-duration-container').show();
+            $('#popover-mute-duration').attr('required', true);
         } else {
             $('#mute-duration-container').hide();
+            $('#popover-mute-duration').removeAttr('required');
         }
     });
 });

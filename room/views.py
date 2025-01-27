@@ -76,6 +76,7 @@ def delete_room_view(request, room_id):
 def room_detail_view(request, room_id):
     user = User.objects.get(id=request.session.get('user_id'))
     room = get_object_or_404(Room, id=room_id)
+    check_user_to_unmute(room, user)
 
     user_status = get_object_or_404(UserStatus, user=user, room=room)
     if user_status.status == "banned":
@@ -111,6 +112,14 @@ def room_detail_view(request, room_id):
     })
 
 
+def check_user_to_unmute(room, user):
+    user_status = get_object_or_404(UserStatus, user=user, room=room)
+    if user_status.status == "muted" and user_status.mute_end_time < now():
+        user_status.status = "user"
+        user_status.mute_end_time = None
+        user_status.save()
+
+
 last_message_times = {}
 
 
@@ -142,38 +151,47 @@ def get_messages(request, room_id):
     timeout = 30
     start_time = now()
     while (now() - start_time).seconds < timeout:
-        new_messages = room.messages.filter(
-            updated_at__gt=last_seen_time
-        ).order_by("sent_at")
+        check_user_to_unmute(room, user)
 
-        if new_messages.exists():
-            latest_message_time = new_messages.last().updated_at.isoformat()
-
-            messages_data = []
-            for msg in new_messages:
-                html_message = render_to_string('partials/message_line.html', {
-                    'message': msg,
-                    'today': today,
-                    'yesterday': yesterday,
-                    "is_owner": is_owner,
-                    "is_admin": is_admin,
-                    "current_user": user,
-                }).strip()
-
-                messages_data.append({
-                    'id': msg.id,
-                    'html': html_message,
-                    'is_deleted': msg.is_deleted,
-                })
-
-            return JsonResponse({
-                'messages': messages_data,
-                'latest_message_time': latest_message_time,
-            })
-
+        response = process_messages(room, user, last_seen_time, today, yesterday, is_owner, is_admin)
+        if response:
+            return response
         sleep(1)
 
     return JsonResponse({'html_message': None})
+
+
+def process_messages(room, user, last_seen_time, today, yesterday, is_owner, is_admin):
+    new_messages = room.messages.filter(
+        updated_at__gt=last_seen_time
+    ).order_by("sent_at")
+
+    if new_messages.exists():
+        latest_message_time = new_messages.last().updated_at.isoformat()
+
+        messages_data = []
+        for msg in new_messages:
+            html_message = render_to_string('partials/message_line.html', {
+                'message': msg,
+                'today': today,
+                'yesterday': yesterday,
+                "is_owner": is_owner,
+                "is_admin": is_admin,
+                "current_user": user,
+            }).strip()
+
+            messages_data.append({
+                'id': msg.id,
+                'html': html_message,
+                'is_deleted': msg.is_deleted,
+            })
+
+        return JsonResponse({
+            'messages': messages_data,
+            'latest_message_time': latest_message_time,
+        })
+
+    return None
 
 
 @login_required

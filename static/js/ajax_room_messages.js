@@ -40,8 +40,7 @@ export function getMessages() {
                 isPolling = false;
                 getMessages();
             },
-            error: function (xhr, status, error) {
-                console.info('Error while polling messages:', error);
+            error: function () {
                 isPolling = false;
                 setTimeout(getMessages, 3000);
             }

@@ -49,6 +49,10 @@ export function getMessages() {
     }
 }
 
+function replaceEmoji(text) {
+    text.replace(';-)', '😉');
+}
+
 
 $(document).ready(function () {
     getMessages();
@@ -62,6 +66,7 @@ $(document).ready(function () {
     $('.send-btn').on('click', function (e) {
         e.preventDefault();
         const message = $('#msg').val().trim();
+        replaceEmoji(message);
         if (message) {
             $.ajax({
                 url: `/room/${roomId}/send_message/`,

@@ -1,6 +1,8 @@
 import { getMessages, state, replaceEmoji } from "./ajax_room_messages.js";
 
-$(document).on("click", "#edit-message", function (e) {
+$(document).on("click", ".edit-message", function (e) {
+    $('.edit-message').attr("style", "display: none;");
+    $('.delete-message').attr("style", "display: none;");
     e.preventDefault();
     state.isEditing = true; // Set editing flag
     const button = $(this);
@@ -14,9 +16,9 @@ $(document).on("click", "#edit-message", function (e) {
         <textarea class="edit-textarea form-control mb-2">${messageContent}</textarea>
         <button class="save-edit-button btn btn-sm btn-primary">Enregistrer</button>
         <button class="cancel-edit-button btn btn-sm btn-secondary">Annuler</button>
-        <button class="btn emoji-btn p-0 me-2">
-            <i class="bi bi-emoji-smile-fill"></i>
-        </button>
+        <a tabindex="0" class="btn btn emoji-btn p-0 me-2" role="button" data-bs-toggle="popover"
+                       data-bs-trigger="focus" title="Emojis"><i
+                            class="bi bi-emoji-smile-fill"></i></a>
     `);
 });
 
@@ -28,6 +30,8 @@ $(document).on("click", ".cancel-edit-button", function (e) {
 
     // Restore the original content
     messageLine.find(".text-break").text(originalContent);
+    $('.edit-message').attr("style", "display: block;");
+    $('.delete-message').attr("style", "display: block;");
 });
 
 $(document).on("click", ".save-edit-button", function (e) {
@@ -48,6 +52,8 @@ $(document).on("click", ".save-edit-button", function (e) {
         success: function (response) {
             state.isEditing = false;
             messageLine.find(".text-break").text(response.content);
+            $('.edit-message').attr("style", "display: block;");
+            $('.delete-message').attr("style", "display: block;");
         },
         error: function () {
             alert("Erreur lors de la modification du message.");

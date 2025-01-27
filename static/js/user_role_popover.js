@@ -53,6 +53,8 @@ $(document).ready(function () {
                 return 'Utilisateur';
             case 'muted':
                 return 'Muet';
+            case 'banned':
+                return 'Banni';
             default:
                 return 'Inconnu';
         }

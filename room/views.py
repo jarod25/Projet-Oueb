@@ -94,11 +94,12 @@ def room_detail_view(request, room_id):
         owner = owner_status.user if owner_status else None
         rooms_with_owner.append({"room": room_owner, "owner": owner})
 
-    room_users = UserStatus.objects.filter(room=room)
+    room_users = UserStatus.objects.filter(room=room).filter(status__in=["owner", "administrator", "user", "muted"])
     room_messages = room.messages.order_by("sent_at", "id")
 
     is_owner = UserStatus.objects.filter(room=room, user=user, status="owner").exists()
     is_admin = UserStatus.objects.filter(room=room, user=user, status="administrator").exists()
+    is_muted = user_status.status == "muted"
 
     return render(request, "room_details.html", {
         "room": room,
@@ -109,6 +110,7 @@ def room_detail_view(request, room_id):
         "room_users": room_users,
         "is_owner": is_owner,
         "is_admin": is_admin,
+        "is_muted": is_muted
     })
 
 
@@ -128,6 +130,8 @@ def get_messages(request, room_id):
     user_id = request.session.get('user_id')
     user = User.objects.get(id=user_id)
     room = get_object_or_404(Room, id=room_id)
+    if not room:
+        return JsonResponse({"error": "Salon non trouvé."}, status=404)
     today = date.today()
     yesterday = today - timedelta(days=1)
     user_status = get_object_or_404(UserStatus, user=user, room=room)
@@ -151,6 +155,9 @@ def get_messages(request, room_id):
     timeout = 30
     start_time = now()
     while (now() - start_time).seconds < timeout:
+        if not room:
+            return JsonResponse({"error": "Salon non trouvé."}, status=404)
+
         check_user_to_unmute(room, user)
 
         response = process_messages(room, user, last_seen_time, today, yesterday, is_owner, is_admin)
@@ -271,6 +278,9 @@ def invite_user_view(request, room_id):
 
         if Invitation.objects.filter(sender=user, receiver=receiver, room=room, status="pending").exists():
             return JsonResponse({"error": "Invitation déjà envoyée !"}, status=400)
+
+        if Invitation.objects.filter(sender=user, receiver=receiver, room=room, status="accepted").exists():
+            return JsonResponse({"error": "L'utilisateur est déjà dans le salon !"}, status=400)
 
         Invitation.objects.create(sender=user, receiver=receiver, room=room)
         return JsonResponse({"message": "Invitation envoyée avec succès."}, status=201)

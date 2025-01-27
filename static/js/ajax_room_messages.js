@@ -10,7 +10,7 @@ let lastMessageTime = null;
 let isPolling = false;
 
 export function getMessages() {
-    if (roomId && !isPolling) {
+    if (typeof roomId !== 'undefined' && !isPolling) {
         isPolling = true;
         const params = lastMessageTime ? `?last_message_time=${encodeURIComponent(lastMessageTime)}` : "";
         $.ajax({
@@ -42,7 +42,9 @@ export function getMessages() {
             },
             error: function () {
                 isPolling = false;
-                setTimeout(getMessages, 3000);
+                if (typeof roomId !== 'undefined') {
+                    setTimeout(getMessages, 3000);
+                }
             }
         });
     }
@@ -54,7 +56,8 @@ export function replaceEmoji(text) {
         ':-(': '☹️', ':(': '☹️',
         ';-)': '😉', ';)': '😉',
         ':-D': '😁', ':D': '😁',
-        ':-P': '😛', ':P': '😛', ':-p': '😛', ':p': '😛',
+        ':-P': '😛', ':P': '😛',
+        ':-p': '😛', ':p': '😛',
         ':-O': '😮', ':O': '😮',
         ':-o': '😮', ':o': '😮',
         ':-|': '😐', ':|': '😐',
@@ -68,8 +71,8 @@ export function replaceEmoji(text) {
         ':-$': '🤑', ':$': '🤑',
         ':-@': '😡', ':@': '😡',
         ':-!': '😮‍💨', ':!': '😮‍💨',
-        ':-Z': '😴', ':Z': '😴', ':-z': '😴', ':z': '😴',
-        ':^)': '🤨',
+        ':-Z': '😴', ':Z': '😴',
+        ':-z': '😴', ':z': '😴',
         'B-)': '😎', 'B)': '😎',
         ':-]': '😏', ':]': '😏',
         ':-[': '😔', ':[': '😔',
@@ -80,13 +83,10 @@ export function replaceEmoji(text) {
         '3:-)': '😈', '3:)': '😈',
         ':-E': '😬', ':E': '😬',
         ':3': '🐱',
-        ':^)': '🤓',
-        ':-)': '🙂', ':)': '🙂',
         '8-)': '😎', '8)': '😎',
         ':-B': '🤓', ':B': '🤓',
         ':-C': '😵', ':C': '😵',
         ':|]': '😼',
-        ':-)': '😃', ':)': '😃',
         ':^)': '🤔',
         ':rolleyes:': '🙄',
         ':shrug:': '🤷',
@@ -105,12 +105,15 @@ export function replaceEmoji(text) {
         ':clap:': '👏',
         ':pray:': '🙏',
         ':wink:': '😉',
-        ':laugh:': '😂',
-        ':cry:': '😭',
+        ':joy:': '😂',
+        ':sob:': '😭',
         ':angry:': '😠',
         ':kiss:': '😘',
         ':heart:': '❤️',
         ':brokenheart:': '💔',
+        ':eyes:': '👀',
+        ':clown:': '🤡',
+        ':rofl:': '🤣',
     };
 
     // Replace each smiley using the map
@@ -120,34 +123,34 @@ export function replaceEmoji(text) {
 
 
 $(document).ready(function () {
-    getMessages();
-    scrollToBottom();
+    if (typeof roomId !== 'undefined') {
+        getMessages();
+        scrollToBottom();
 
-    $('#msg').on('input', function () {
-        const sendButton = $('.send-btn');
-        sendButton.prop('disabled', !$(this).val().trim().length);
-    });
+        $('#msg').on('input', function () {
+            const sendButton = $('.send-btn');
+            sendButton.prop('disabled', !$(this).val().trim().length);
+        });
 
-    $('.send-btn').on('click', function (e) {
-        e.preventDefault();
-        let message = $('#msg').val().trim();
-        message = replaceEmoji(message); // Capturez le retour ici
-        console.log(message);
-        if (message) {
-            $.ajax({
-                url: `/room/${roomId}/send_message/`,
-                method: 'POST',
-                headers: {'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()},
-                data: {content: message},
-                success: function () {
-                    $('#msg').val('');
-                    getMessages();
-                },
-                error: function () {
-                    alert('Erreur lors de l\'envoi du message.');
-                }
-            });
-        }
-    });
-    
+        $('.send-btn').on('click', function (e) {
+            e.preventDefault();
+            let message = $('#msg').val().trim();
+            message = replaceEmoji(message); // Capturez le retour ici
+            if (message) {
+                $.ajax({
+                    url: `/room/${roomId}/send_message/`,
+                    method: 'POST',
+                    headers: {'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()},
+                    data: {content: message},
+                    success: function () {
+                        $('#msg').val('');
+                        getMessages();
+                    },
+                    error: function () {
+                        alert('Erreur lors de l\'envoi du message.');
+                    }
+                });
+            }
+        });
+    }
 });

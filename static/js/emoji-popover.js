@@ -139,7 +139,6 @@ $(document).ready(function () {
         });
 
         emojiButton.on("click", function (e) {
-            console.log("emoji button clicked");
             e.stopPropagation();
             const rect = this.getBoundingClientRect();
             emojiPopover.css({

@@ -37,19 +37,27 @@
                 {% include 'partials/message_list.html' %}
 
                 <!-- Zone d'Input -->
-                <div class="d-flex align-items-center p-2 bg-light rounded">
-                    <form class="d-flex flex-grow-1" id="message" method="post">
-                        {% csrf_token %}
-                        <textarea id="msg" class="form-control bg-light border-0 shadow-none me-2" name="content"
-                                  placeholder="Écrivez votre message ici..." required></textarea>
-                        <button type="submit" class="btn send-btn p-0" title="Envoyer">
-                            <i class="bi bi-arrow-right-circle"></i>
-                        </button>
-                    </form>
-                    <a tabindex="0" class="btn btn emoji-btn p-0 mx-2" role="button" data-bs-toggle="popover"
-                       data-bs-trigger="focus" title="Emojis"><i
-                            class="bi bi-emoji-smile-fill"></i></a>
-                </div>
+                {% if is_muted %}
+                    <div class="d-flex align-items-center p-2 bg-light rounded">
+                        <div class="form-control bg-light border-0 shadow-none me-2" disabled>
+                            Vous avez été muté
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="d-flex align-items-center p-2 bg-light rounded">
+                        <form class="d-flex flex-grow-1" id="message" method="post">
+                            {% csrf_token %}
+                            <textarea id="msg" class="form-control bg-light border-0 shadow-none me-2" name="content"
+                                      placeholder="Écrivez votre message ici..." required></textarea>
+                            <button type="submit" class="btn send-btn p-0" title="Envoyer">
+                                <i class="bi bi-arrow-right-circle"></i>
+                            </button>
+                        </form>
+                        <a tabindex="0" class="btn btn emoji-btn p-0 mx-2" role="button" data-bs-toggle="popover"
+                           data-bs-trigger="focus" title="Emojis"><i
+                                class="bi bi-emoji-smile-fill"></i></a>
+                    </div>
+                {% endif %}
             </div>
 
             <!-- Zone d'utilisateurs -->

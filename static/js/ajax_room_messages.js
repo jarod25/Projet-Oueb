@@ -10,8 +10,6 @@ let lastMessageTime = null;
 let isPolling = false;
 
 export function getMessages() {
-    console.log(roomId);
-    console.log('getMessages');
     if (typeof roomId !== 'undefined' && !isPolling) {
         isPolling = true;
         const params = lastMessageTime ? `?last_message_time=${encodeURIComponent(lastMessageTime)}` : "";
@@ -125,8 +123,6 @@ export function replaceEmoji(text) {
 
 
 $(document).ready(function () {
-    console.log(roomId);
-    console.log('sendMessages');
     if (typeof roomId !== 'undefined') {
         getMessages();
         scrollToBottom();

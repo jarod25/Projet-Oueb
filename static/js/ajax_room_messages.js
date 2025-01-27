@@ -49,7 +49,7 @@ export function getMessages() {
     }
 }
 
-function replaceEmoji(text) {
+export function replaceEmoji(text) {
     const emojiMap = {
         ':-)': '😊', ':)': '😊',
         ':-(': '☹️', ':(': '☹️',

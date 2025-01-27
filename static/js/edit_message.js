@@ -1,4 +1,4 @@
-import {getMessages, state} from "./ajax_room_messages.js";
+import { getMessages, state, replaceEmoji } from "./ajax_room_messages.js";
 
 $(document).on("click", "#edit-message", function (e) {
     e.preventDefault();
@@ -35,7 +35,8 @@ $(document).on("click", ".save-edit-button", function (e) {
     const button = $(this);
     const messageLine = button.closest("#message-line");
     const messageId = messageLine.data("message-id");
-    const newContent = messageLine.find(".edit-textarea").val();
+    let newContent = messageLine.find(".edit-textarea").val();
+    newContent = replaceEmoji(newContent)
 
     $.ajax({
         url: `/room/${messageId}/edit-message/`,

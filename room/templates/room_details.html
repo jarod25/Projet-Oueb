@@ -38,9 +38,6 @@
 
                 <!-- Zone d'Input -->
                 <div class="d-flex align-items-center p-2 bg-light rounded">
-                    <button class="btn emoji-btn p-0 me-2">
-                        <i class="bi bi-emoji-smile-fill"></i>
-                    </button>
                     <form class="d-flex flex-grow-1" id="message" method="post">
                         {% csrf_token %}
                         <textarea id="msg" class="form-control bg-light border-0 shadow-none me-2" name="content"
@@ -49,6 +46,9 @@
                             <i class="bi bi-arrow-right-circle"></i>
                         </button>
                     </form>
+                    <a tabindex="0" class="btn btn emoji-btn p-0 mx-2" role="button" data-bs-toggle="popover"
+                       data-bs-trigger="focus" title="Emojis"><i
+                            class="bi bi-emoji-smile-fill"></i></a>
                 </div>
             </div>
 

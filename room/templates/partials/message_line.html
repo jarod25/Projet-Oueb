@@ -11,12 +11,12 @@
             {% endif %}
         </span>
         {% if current_user == message.author or is_owner or is_admin %}
-            <button type="button" title="Supprimer" id="delete-message" class="action-message px-1">
+            <button type="button" title="Supprimer" id="" class="delete-message action-message px-1">
                 <i class="bi bi-trash-fill"></i>
             </button>
         {% endif %}
         {% if current_user == message.author %}
-            <button type="button" title="Modifier" id="edit-message" class="action-message px-1">
+            <button type="button" title="Modifier" class="edit-message action-message px-1">
                 <i class="bi bi-pencil-fill"></i>
             </button>
         {% endif %}

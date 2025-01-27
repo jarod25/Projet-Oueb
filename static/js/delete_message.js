@@ -1,6 +1,6 @@
 import {getMessages} from "./ajax_room_messages.js";
 
-$(document).on("click", "#delete-message", function (e) {
+$(document).on("click", ".delete-message", function (e) {
     e.preventDefault();
     const button = $(this);
     const messageLine = button.closest("#message-line");

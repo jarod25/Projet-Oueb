@@ -1,103 +1,105 @@
-import { places_emoji } from './emoji-files/emoji-places.js';
-import { activities_emoji } from './emoji-files/emoji-activity.js';
-import { flags_emoji } from './emoji-files/emoji-flags.js';
-import { food_emoji } from './emoji-files/emoji-food.js';
-import { nature_emoji } from './emoji-files/emoji-nature.js';
-import { objects_emoji } from './emoji-files/emoji-objects.js';
-import { people_emoji } from './emoji-files/emoji-people.js';
-import { symbols_emoji } from './emoji-files/emoji-symbols.js';
-
-import {getMessages, state} from "./ajax_room_messages.js";
+import {places_emoji} from './emoji-files/emoji-places.js';
+import {activities_emoji} from './emoji-files/emoji-activity.js';
+import {flags_emoji} from './emoji-files/emoji-flags.js';
+import {food_emoji} from './emoji-files/emoji-food.js';
+import {nature_emoji} from './emoji-files/emoji-nature.js';
+import {objects_emoji} from './emoji-files/emoji-objects.js';
+import {people_emoji} from './emoji-files/emoji-people.js';
+import {symbols_emoji} from './emoji-files/emoji-symbols.js';
 
 $(document).ready(function () {
-    const messagesContainer = $("#messages-container");
-    const roomId = messagesContainer.data("room-id");
+    const emojiButton = $(".emoji-btn");
 
-    // Fonction pour toujours scroller vers le bas
-    function scrollToBottom() {
-        messagesContainer.scrollTop(messagesContainer[0].scrollHeight);
-    }
-
-    // Activer/désactiver le bouton d'envoi en fonction de l'entrée
-    $('#msg').on('input', function () {
-        const sendButton = $('.send-btn');
-        sendButton.prop('disabled', !$(this).val().trim().length);
+    const emojiPopover = $("<div>").addClass("emoji-popover").css({
+        position: "absolute",
+        zIndex: 9999,
+        maxHeight: "300px",
+        maxWidth: "500px",
+        overflow: "hidden",
+        background: "#fff",
+        border: "1px solid #ddd",
+        borderRadius: "8px",
+        display: "none",
     });
-
-    // Gestion des emojis
-    const emojiButton = document.querySelector('.emoji-btn');
-    const emojiPopover = document.createElement('div');
-    emojiPopover.classList.add('emoji-popover', 'popover', 'show');
-    emojiPopover.style.position = 'absolute';
-    emojiPopover.style.zIndex = 9999;
-    emojiPopover.style.display = 'none';
-    emojiPopover.style.maxHeight = '300px';
-    emojiPopover.style.overflowY = 'auto';
-    emojiPopover.style.background = '#fff';
-    emojiPopover.style.border = '1px solid #ddd';
-    emojiPopover.style.borderRadius = '8px';
-    emojiPopover.style.padding = '10px';
 
     const emojiCategories = {
-        Personnes: people_emoji,
-        Nature: nature_emoji,
-        Nourriture: food_emoji,
-        Activités: activities_emoji,
-        Endroits: places_emoji,
-        Objets: objects_emoji,
-        Symboles: symbols_emoji,
-        Drapeaux: flags_emoji,
+        "😀": people_emoji,
+        "🌳": nature_emoji,
+        "🍔": food_emoji,
+        "⚽": activities_emoji,
+        "🗺️": places_emoji,
+        "🛠️": objects_emoji,
+        "💡": symbols_emoji,
+        "🏳️‍🌈": flags_emoji,
     };
 
-    // Création des boutons de catégories
-    const categoryBar = document.createElement('div');
-    categoryBar.style.display = 'flex';
-    categoryBar.style.justifyContent = 'space-around';
-    categoryBar.style.marginBottom = '10px';
-
-    Object.keys(emojiCategories).forEach(category => {
-        const categoryButton = document.createElement('button');
-        categoryButton.textContent = category;
-        categoryButton.style.border = 'none';
-        categoryButton.style.background = '#f8f9fa';
-        categoryButton.style.padding = '5px 10px';
-        categoryButton.style.cursor = 'pointer';
-        categoryButton.style.borderRadius = '4px';
-        categoryButton.addEventListener('click', () => loadEmojiCategory(category));
-        categoryBar.appendChild(categoryButton);
+    const categoryList = $("<div>").css({
+        display: "flex",
+        flexDirection: "column",
+        overflowY: "auto",
+        maxHeight: "300px",
+        gap: "5px",
+        padding: "10px",
+        borderRight: "1px solid #ddd",
+        overflowX: "hidden",
     });
 
-    emojiPopover.appendChild(categoryBar);
-
-    // Conteneur pour les emojis
-    const emojiContainer = document.createElement('div');
-    emojiContainer.classList.add('emoji-container');
-    emojiContainer.style.display = 'grid';
-    emojiContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(30px, 1fr))';
-    emojiContainer.style.gap = '5px';
-    emojiContainer.style.padding = '5px';
-    emojiPopover.appendChild(emojiContainer);
-
-    // Charger une catégorie d'emojis
-    function loadEmojiCategory(category) {
-        emojiContainer.innerHTML = '';
-        const emojis = emojiCategories[category];
-        emojis.forEach(emoji => {
-            const emojiElement = document.createElement('button');
-            emojiElement.classList.add('emoji-item');
-            emojiElement.textContent = emoji.character;
-            emojiElement.style.fontSize = '24px';
-            emojiElement.style.border = 'none';
-            emojiElement.style.background = 'transparent';
-            emojiElement.style.cursor = 'pointer';
-            emojiElement.addEventListener('click', () => insertEmoji(emoji.character));
-            emojiContainer.appendChild(emojiElement);
+    const emojiContainer = $("<div>")
+        .addClass("emoji-container")
+        .css({
+            display: "grid",
+            gridTemplateColumns: "repeat(10, 1fr)",
+            gap: "5px",
+            overflowY: "auto",
+            maxHeight: "300px",
+            padding: "10px",
+            flex: 1,
         });
-    }
 
-    // Insérer l'emoji dans le champ d'entrée
+    Object.keys(emojiCategories).forEach((category) => {
+        const categoryButton = $("<button>")
+            .addClass("emoji-category")
+            .text(category)
+            .css({
+                fontSize: "24px",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+            })
+            .on("click", () => scrollToCategory(category));
+        categoryList.append(categoryButton);
+    });
+
+    emojiPopover.append(categoryList, emojiContainer);
+
+    Object.entries(emojiCategories).forEach(([category, emojis], index) => {
+        if (index > 0) {
+            emojiContainer.append($("<hr>").css({
+                gridColumn: "1 / -1",
+                border: "none",
+                borderTop: "1px solid #ddd",
+                margin: "10px 0",
+            }));
+        }
+
+        emojis.forEach((emoji) => {
+            const emojiElement = $("<button>")
+                .addClass("emoji-item")
+                .text(emoji.character)
+                .css({
+                    fontSize: "24px",
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                })
+                .on("click", () => insertEmoji(emoji.character));
+            emojiElement.attr("data-category", category);
+            emojiContainer.append(emojiElement);
+        });
+    });
+
     function insertEmoji(emoji) {
-        const textarea = document.getElementById('msg');
+        const textarea = $("#msg")[0];
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
         const text = textarea.value;
@@ -107,32 +109,50 @@ $(document).ready(function () {
         textarea.focus();
     }
 
-    emojiButton.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const rect = emojiButton.getBoundingClientRect();
-        const popoverHeight = emojiPopover.offsetHeight || 300;
-        emojiPopover.style.top = `${rect.top + window.scrollY - popoverHeight}px`; // Position au-dessus
-        emojiPopover.style.left = `${rect.left + window.scrollX}px`;
-        emojiPopover.style.display = emojiPopover.style.display === 'none' ? 'block' : 'none';
+    function scrollToCategory(category) {
+        const firstEmoji = emojiContainer.find(`[data-category='${category}']`).first();
+        if (firstEmoji.length) {
+            emojiContainer.scrollTop(
+                firstEmoji.position().top + emojiContainer.scrollTop() - emojiContainer.position().top
+            );
+        }
+    }
+
+    emojiContainer.on("scroll", function () {
+        const scrollTop = $(this).scrollTop();
+        let activeCategory = null;
+
+        emojiContainer.find(".emoji-item").each(function () {
+            if ($(this).position().top + scrollTop >= 0) {
+                activeCategory = $(this).attr("data-category");
+                return false;
+            }
+        });
+
+        categoryList.find(".emoji-category").css("background", "transparent");
     });
 
-    // Close popover on outside click
-    document.addEventListener('click', (e) => {
-        if (!emojiPopover.contains(e.target) && e.target !== emojiButton) {
-            emojiPopover.style.display = 'none';
+    emojiButton.on("click", function (e) {
+        console.log("emoji button clicked");
+        e.stopPropagation();
+        const rect = this.getBoundingClientRect();
+        emojiPopover.css({
+            top: rect.top + window.scrollY - emojiPopover.outerHeight() - 5,
+            left: rect.left + window.scrollX,
+            display: emojiPopover.css("display") === "none" ? "flex" : "none",
+        });
+
+        if (emojiPopover.css("display") === "flex") {
+            emojiContainer.scrollTop(0);
         }
     });
 
-    // Charger la catégorie par défaut
-    loadEmojiCategory('Personnes');
 
-    // Ajouter le popover au DOM
-    document.body.appendChild(emojiPopover);
+    $(document).on("click", (e) => {
+        if (!emojiPopover.is(e.target) && emojiPopover.has(e.target).length === 0 && !emojiButton.is(e.target)) {
+            emojiPopover.hide();
+        }
+    });
 
-    
-
-    // Récupération initiale des messages
-    getMessages();
-    scrollToBottom();
+    $("body").append(emojiPopover);
 });
-

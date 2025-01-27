@@ -1,24 +1,19 @@
 import { getMessages, state, replaceEmoji } from "./ajax_room_messages.js";
 
 $(document).on("click", ".edit-message", function (e) {
-    $('.edit-message').attr("style", "display: none;");
-    $('.delete-message').attr("style", "display: none;");
-    e.preventDefault();
     state.isEditing = true; // Set editing flag
+    e.preventDefault();
     const button = $(this);
     const messageLine = button.closest("#message-line");
+    $('.edit-message').not(button).attr("style", "display: none;"); // Cache les autres boutons
+    $('.delete-message').attr("style", "display: none;");
     const messageContent = messageLine.find(".text-break").text().trim();
-    // Save original content for restoration if canceled
     messageLine.data("original-content", messageContent);
     getMessages();
-    // Replace the message content with a textarea and buttons
     messageLine.find(".text-break").html(`
         <textarea class="edit-textarea form-control mb-2">${messageContent}</textarea>
         <button class="save-edit-button btn btn-sm btn-primary">Enregistrer</button>
         <button class="cancel-edit-button btn btn-sm btn-secondary">Annuler</button>
-        <a tabindex="0" class="btn btn emoji-btn p-0 me-2" role="button" data-bs-toggle="popover"
-                       data-bs-trigger="focus" title="Emojis"><i
-                            class="bi bi-emoji-smile-fill"></i></a>
     `);
 });
 
